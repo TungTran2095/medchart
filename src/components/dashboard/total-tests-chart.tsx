@@ -84,9 +84,9 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Total Tests Over Time</CardTitle>
+        <CardTitle>Xu hướng xét nghiệm theo ngày</CardTitle>
         <CardDescription>
-          Number of tests performed each day.
+          Số lượng xét nghiệm được thực hiện mỗi ngày.
         </CardDescription>
       </CardHeader>
       <CardContent>

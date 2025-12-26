@@ -97,7 +97,6 @@ export function Dashboard() {
       try {
         const tableData = await getTableData(currentTable);
         setData(tableData);
-        setFilteredData(tableData); // Initialize filteredData
       } catch (error) {
         console.error(error);
         toast({
@@ -146,7 +145,7 @@ export function Dashboard() {
 
     // isMindray filtering
     if (isMindrayOnly) {
-      newFilteredData = newFilteredData.filter(item => item.isMindray === 1);
+      newFilteredData = newFilteredData.filter(item => item.isMindray === 1 || item.isMindray === true);
     }
     
     setFilteredData(newFilteredData);
