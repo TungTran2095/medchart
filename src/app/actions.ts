@@ -13,7 +13,6 @@ const headers = {
   apikey: supabaseKey,
   Authorization: `Bearer ${supabaseKey}`,
   'Accept-Profile': 'public',
-  'Prefer': 'count=exact'
 };
 
 /**
@@ -68,17 +67,36 @@ export async function getSchema(): Promise<DatabaseSchema> {
  * @returns {Promise<any[]>} A promise that resolves to an array of all data rows.
  */
 export async function getTableData(table: string): Promise<any[]> {
-    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*`, {
-        headers: {
-            ...headers,
-            'Range-Unit': 'items',
-            'Range': '0-1000000' // Fetch up to a very large number of rows
-        },
-        cache: 'no-store'
-    });
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch data for table ${table}: ${res.statusText}`);
-  }
-  return res.json();
+    while(hasMore) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        
+        const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*`, {
+            headers: {
+                ...headers,
+                'Range-Unit': 'items',
+                'Range': `${from}-${to}`
+            },
+            cache: 'no-store'
+        });
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch data for table ${table}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        allData = allData.concat(data);
+
+        if (data.length < pageSize) {
+            hasMore = false;
+        } else {
+            page++;
+        }
+    }
+    return allData;
 }

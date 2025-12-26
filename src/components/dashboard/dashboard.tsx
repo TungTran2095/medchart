@@ -56,7 +56,7 @@ export function Dashboard() {
   const [selectedTestNames, setSelectedTestNames] = useState<string[]>(['all']);
 
   // isMindray filter state
-  const [isMindrayOnly, setIsMindrayOnly] = useState(true);
+  const [isMindrayOnly, setIsMindrayOnly] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -99,7 +99,7 @@ export function Dashboard() {
       const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
       setAllTestNames(testNames);
     }
-  }, [data, minDate, maxDate, dateRange, sliderRange]);
+  }, [data, minDate, maxDate]);
 
   useEffect(() => {
     const fetchData = async () => {
