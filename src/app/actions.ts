@@ -1,6 +1,6 @@
 'use server';
 
-import type { DatabaseSchema } from '@/lib/types';
+import type { DatabaseSchema, TableSchema } from '@/lib/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -43,6 +43,7 @@ export async function getSchema(): Promise<DatabaseSchema> {
         return {
           name: columnName,
           type: columnDef.type,
+          format: columnDef.format,
         };
       });
 
@@ -64,6 +65,7 @@ export async function getSchema(): Promise<DatabaseSchema> {
 export async function getTableData(table: string): Promise<any[]> {
   const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*`, {
     headers,
+    cache: 'no-store'
   });
 
   if (!res.ok) {

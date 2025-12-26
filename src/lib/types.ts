@@ -1,6 +1,7 @@
 export type TableColumn = {
   name: string;
   type: string;
+  format?: string;
 };
 
 export type TableSchema = {
