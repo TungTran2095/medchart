@@ -1,20 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChartDisplay } from './chart-display';
-import { DataTable } from './data-table';
-import type { ChartDataConfig } from '@/lib/types';
 import { getTableData } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
-
-const defaultChartConfig: ChartDataConfig = {
-    chartType: 'bar',
-    xAxis: 'ten_may',
-    yAxis: 'so_luong',
-};
 
 function DashboardHeader() {
   return (
@@ -30,7 +21,6 @@ function DashboardHeader() {
 export function Dashboard() {
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [chartConfig, setChartConfig] = useState<ChartDataConfig | null>(defaultChartConfig);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTable, setCurrentTable] = useState<string>('mindray_trans');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -74,13 +64,13 @@ export function Dashboard() {
     <div className="flex min-h-screen w-full flex-col">
         <DashboardHeader />
         <main className="flex-1 p-4 md:p-8 space-y-8">
-          {currentTable === 'mindray_trans' && (
-              <div className="flex justify-end">
-                  <DatePicker date={selectedDate} setDate={setSelectedDate} />
-              </div>
-          )}
-          <ChartDisplay data={filteredData} config={chartConfig} isLoading={isLoading} />
-          <DataTable data={filteredData} isLoading={isLoading} tableName={currentTable} />
+          <div className="flex justify-end">
+              <DatePicker date={selectedDate} setDate={setSelectedDate} />
+          </div>
+          {/* Dashboard trống, sẵn sàng để thêm biểu đồ mới */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Các thành phần biểu đồ mới sẽ được thêm vào đây */}
+          </div>
         </main>
     </div>
   );
