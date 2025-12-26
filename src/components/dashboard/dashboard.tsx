@@ -145,7 +145,11 @@ export function Dashboard() {
 
     // isMindray filtering
     if (isMindrayOnly) {
-      newFilteredData = newFilteredData.filter(item => item.isMindray === 1 || item.isMindray === true || item.isMindray === '1');
+      newFilteredData = newFilteredData.filter(item => {
+        const value = item.isMindray;
+        // This will handle 1, '1', true, 'true'
+        return value == 1 || String(value).toLowerCase() === 'true';
+      });
     }
     
     setFilteredData(newFilteredData);
