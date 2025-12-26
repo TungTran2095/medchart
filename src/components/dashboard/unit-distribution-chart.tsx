@@ -95,6 +95,10 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
   if (isLoading) {
     return (
       <Card>
+        <CardHeader>
+           <Skeleton className="h-8 w-3/4" />
+           <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
         <CardContent className="p-6">
           <LoadingState />
         </CardContent>
@@ -105,6 +109,12 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
   if (!data.length) {
     return (
       <Card className="min-h-[445px] flex">
+        <CardHeader>
+            <CardTitle>Phân bố xét nghiệm theo đơn vị</CardTitle>
+            <CardDescription>
+            Số lượng xét nghiệm được thực hiện tại mỗi đơn vị.
+            </CardDescription>
+        </CardHeader>
         <CardContent className="p-6 flex-1 flex">
           <EmptyState />
         </CardContent>

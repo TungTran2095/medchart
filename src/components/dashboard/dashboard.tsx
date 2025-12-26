@@ -7,7 +7,7 @@ import { Icons } from '@/components/icons';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { addDays, differenceInDays, format, parseISO } from 'date-fns';
+import { addDays, differenceInDays, format, parseISO, isValid } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import {
   DropdownMenu,
@@ -67,8 +67,10 @@ export function Dashboard() {
       if (!item.ngay_vao_so) continue;
       try {
         const d = parseISO(item.ngay_vao_so.split(' ')[0]);
-        if (!min || d < min) min = d;
-        if (!max || d > max) max = d;
+        if (isValid(d)) {
+          if (!min || d < min) min = d;
+          if (!max || d > max) max = d;
+        }
       } catch(e) {
         // Ignore invalid dates
       }
@@ -78,19 +80,18 @@ export function Dashboard() {
   
   // Set initial date range and extract unique values for filters when data is loaded
   useEffect(() => {
-    if (minDate && maxDate) {
+    if (data.length > 0 && minDate && maxDate) {
       setDateRange({ from: minDate, to: maxDate });
       const totalDays = differenceInDays(maxDate, minDate);
       setSliderRange([0, totalDays]);
-    }
-    if (data.length > 0) {
+      
       const units = [...new Set(data.map(item => item.ten_don_vi).filter(Boolean))].sort();
       setAllUnits(units);
       
       const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
       setAllTestNames(testNames);
     }
-  }, [minDate, maxDate, data]);
+  }, [data, minDate, maxDate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +99,7 @@ export function Dashboard() {
       try {
         const tableData = await getTableData(currentTable);
         setData(tableData);
+        setFilteredData(tableData); // Initialize filtered data
       } catch (error) {
         console.error(error);
         toast({
@@ -115,6 +117,8 @@ export function Dashboard() {
 
   // Filtering logic
   useEffect(() => {
+    if (isLoading) return; // Don't filter until data is loaded
+    
     let newFilteredData = [...data];
 
     // Date filtering
@@ -123,7 +127,7 @@ export function Dashboard() {
         if (!item.ngay_vao_so) return false;
         try {
           const itemDate = parseISO(item.ngay_vao_so.split(' ')[0]);
-          return itemDate >= dateRange.from! && itemDate <= dateRange.to!;
+          return isValid(itemDate) && itemDate >= dateRange.from! && itemDate <= dateRange.to!;
         } catch (e) {
           return false;
         }
@@ -148,14 +152,12 @@ export function Dashboard() {
     if (isMindrayOnly) {
         newFilteredData = newFilteredData.filter(item => {
             const value = item.isMindray;
-            // This will handle 1, '1', true, 'true', and other truthy values
-            // while being safe against null/undefined.
             return value === true || value === 1 || String(value).toLowerCase() === 'true' || String(value) === '1';
         });
     }
     
     setFilteredData(newFilteredData);
-  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, data]);
+  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, data, isLoading]);
 
 
   const handleSliderChange = (value: number[]) => {
@@ -169,13 +171,14 @@ export function Dashboard() {
   
   const handleDateRangeChange = (newRange: DateRange | undefined) => {
     if (newRange?.from && newRange?.to && minDate && maxDate) {
-        setDateRange(newRange);
         const fromDay = differenceInDays(newRange.from, minDate);
         const toDay = differenceInDays(newRange.to, minDate);
-        setSliderRange([fromDay, toDay]);
-    } else {
-       setDateRange(newRange);
+        // Ensure slider values are within bounds
+        const newSliderFrom = Math.max(0, fromDay);
+        const newSliderTo = Math.min(differenceInDays(maxDate, minDate), toDay);
+        setSliderRange([newSliderFrom, newSliderTo]);
     }
+    setDateRange(newRange);
   }
 
   const handleUnitSelection = (unit: string) => {
@@ -223,8 +226,11 @@ export function Dashboard() {
     filteredData.forEach(item => {
       if (item.ngay_vao_so) {
         try {
-          const date = format(parseISO(item.ngay_vao_so.split(' ')[0]), 'yyyy-MM-dd');
-          counts[date] = (counts[date] || 0) + 1;
+          const date = item.ngay_vao_so.split(' ')[0];
+          if (isValid(parseISO(date))) {
+            const formattedDate = format(parseISO(date), 'yyyy-MM-dd');
+            counts[formattedDate] = (counts[formattedDate] || 0) + 1;
+          }
         } catch(e) {
           // ignore
         }

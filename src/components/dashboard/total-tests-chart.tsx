@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 
 type TotalTestsChartProps = {
   data: { date: string; count: number }[];
@@ -64,6 +64,10 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
   if (isLoading) {
     return (
       <Card>
+        <CardHeader>
+           <Skeleton className="h-8 w-3/4" />
+           <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
         <CardContent className="p-6">
           <LoadingState />
         </CardContent>
@@ -74,6 +78,12 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
   if (!data.length) {
     return (
       <Card className="min-h-[445px] flex">
+         <CardHeader>
+            <CardTitle>Xu hướng xét nghiệm theo ngày</CardTitle>
+            <CardDescription>
+            Số lượng xét nghiệm được thực hiện mỗi ngày.
+            </CardDescription>
+        </CardHeader>
         <CardContent className="p-6 flex-1 flex">
           <EmptyState />
         </CardContent>
@@ -99,7 +109,15 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                tickFormatter={(value) => {
+                    try {
+                        const date = parseISO(value);
+                        if(isValid(date)) return format(date, 'MMM d');
+                    } catch (e) {
+                        return value;
+                    }
+                    return value;
+                }}
               />
               <YAxis />
               <Tooltip
