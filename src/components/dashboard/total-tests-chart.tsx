@@ -9,6 +9,7 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  Legend,
 } from 'recharts';
 import {
   Card,
@@ -20,13 +21,14 @@ import {
 import {
   ChartContainer,
   ChartTooltipContent,
+  ChartLegendContent
 } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 type TotalTestsChartProps = {
-  data: { date: string; count: number }[];
+  data: { date: string; total: number; mindray: number }[];
   isLoading: boolean;
 };
 
@@ -55,10 +57,14 @@ function LoadingState() {
 
 export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
     const chartConfig = {
-        count: {
-          label: 'Tests',
+        total: {
+          label: 'Total Tests',
           color: 'hsl(var(--chart-1))',
         },
+        mindray: {
+            label: 'Mindray Tests',
+            color: 'hsl(var(--chart-2))',
+        }
       };
 
   if (isLoading) {
@@ -124,10 +130,18 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" />}
               />
+              <Legend content={<ChartLegendContent />} />
               <Line
                 type="monotone"
-                dataKey="count"
-                stroke="var(--color-count)"
+                dataKey="total"
+                stroke="var(--color-total)"
+                strokeWidth={2}
+                dot={true}
+              />
+              <Line
+                type="monotone"
+                dataKey="mindray"
+                stroke="var(--color-mindray)"
                 strokeWidth={2}
                 dot={true}
               />

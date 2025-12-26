@@ -99,7 +99,7 @@ export function Dashboard() {
       const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
       setAllTestNames(testNames);
     }
-  }, [data, minDate, maxDate]);
+  }, [data, minDate, maxDate, dateRange, sliderRange]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -232,14 +232,21 @@ export function Dashboard() {
   };
   
   const dailyCounts = useMemo(() => {
-    const counts: { [key: string]: number } = {};
+    const counts: { [key: string]: { total: number; mindray: number } } = {};
     filteredData.forEach(item => {
       if (item.ngay_vao_so) {
         try {
           const date = item.ngay_vao_so.split(' ')[0];
           if (isValid(parseISO(date))) {
             const formattedDate = format(parseISO(date), 'yyyy-MM-dd');
-            counts[formattedDate] = (counts[formattedDate] || 0) + 1;
+            if (!counts[formattedDate]) {
+              counts[formattedDate] = { total: 0, mindray: 0 };
+            }
+            counts[formattedDate].total += 1;
+            const isMindray = item.isMindray === true || item.isMindray === 1 || String(item.isMindray).toLowerCase() === 'true' || String(item.isMindray) === '1';
+            if (isMindray) {
+              counts[formattedDate].mindray += 1;
+            }
           }
         } catch(e) {
           // ignore
@@ -249,7 +256,8 @@ export function Dashboard() {
 
     return Object.keys(counts).map(date => ({
       date,
-      count: counts[date]
+      total: counts[date].total,
+      mindray: counts[date].mindray,
     })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredData]);
 
