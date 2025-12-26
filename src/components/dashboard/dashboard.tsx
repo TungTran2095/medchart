@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { getTableData } from '@/app/actions';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { getDashboardData, getInitialDashboardState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
@@ -23,6 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TotalTestsChart } from './total-tests-chart';
 import { UnitDistributionChart } from './unit-distribution-chart';
+import { Skeleton } from '../ui/skeleton';
 
 function DashboardHeader() {
   return (
@@ -35,15 +36,42 @@ function DashboardHeader() {
   );
 }
 
+function InitialLoadingSkeleton() {
+    return (
+        <div className="flex min-h-screen w-full flex-col">
+          <DashboardHeader />
+          <main className="flex-1 p-4 md:p-8 space-y-8">
+            <div className='flex flex-col md:flex-row gap-4 items-center'>
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-72" />
+                <div className="flex-1 w-full md:w-auto">
+                    <div className="flex items-center gap-4">
+                        <Label>Khoảng ngày</Label>
+                        <Skeleton className="h-5 w-full" />
+                    </div>
+                </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+              <TotalTestsChart data={[]} isLoading={true} />
+              <UnitDistributionChart data={[]} isLoading={true} />
+            </div>
+          </main>
+        </div>
+      )
+}
+
 export function Dashboard() {
   const [isClient, setIsClient] = useState(false);
-  const [data, setData] = useState<any[]>([]);
-  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [dailyCounts, setDailyCounts] = useState<any[]>([]);
+  const [unitCounts, setUnitCounts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTable] = useState<string>('mindray_trans');
   const { toast } = useToast();
 
   // Date range states
+  const [minDate, setMinDate] = useState<Date | undefined>();
+  const [maxDate, setMaxDate] = useState<Date | undefined>();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [sliderRange, setSliderRange] = useState([0, 100]);
 
@@ -58,116 +86,63 @@ export function Dashboard() {
   // isMindray filter state
   const [isMindrayOnly, setIsMindrayOnly] = useState(false);
 
+  // Initial data loading
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  // Memoize min and max dates from data
-  const { minDate, maxDate } = useMemo(() => {
-    if (data.length === 0) return { minDate: undefined, maxDate: undefined };
-    let min: Date | undefined;
-    let max: Date | undefined;
-    for (const item of data) {
-      if (!item.ngay_vao_so) continue;
-      try {
-        const d = parseISO(item.ngay_vao_so.split(' ')[0]);
-        if (isValid(d)) {
-          if (!min || d < min) min = d;
-          if (!max || d > max) max = d;
-        }
-      } catch(e) {
-        // Ignore invalid dates
-      }
-    }
-    return { minDate: min, maxDate: max };
-  }, [data]);
-  
-  // Set initial date range and extract unique values for filters when data is loaded
-  useEffect(() => {
-    if (data.length > 0 && minDate && maxDate) {
-      if(!dateRange?.from || !dateRange?.to) {
-        setDateRange({ from: minDate, to: maxDate });
-      }
-      const totalDays = differenceInDays(maxDate, minDate);
-      if (sliderRange[0] === 0 && sliderRange[1] === 100) {
-        setSliderRange([0, totalDays > 0 ? totalDays : 0]);
-      }
-      
-      const units = [...new Set(data.map(item => item.ten_don_vi).filter(Boolean))].sort();
-      setAllUnits(units);
-      
-      const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
-      setAllTestNames(testNames);
-    }
-  }, [data, minDate, maxDate, dateRange, sliderRange]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const tableData = await getTableData(currentTable);
-        setData(tableData);
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to fetch data',
-          description: `Could not load data for table: ${currentTable}`,
-        });
-        setData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [currentTable, toast]);
-
-  // Filtering logic
-  useEffect(() => {
-    if (isLoading || data.length === 0) {
-      setFilteredData([]);
-      return;
-    }
-    
-    let newFilteredData = [...data];
-
-    // Date filtering
-    if (dateRange?.from && dateRange?.to) {
-      newFilteredData = newFilteredData.filter(item => {
-        if (!item.ngay_vao_so) return false;
+    async function loadInitialState() {
         try {
-          const itemDate = parseISO(item.ngay_vao_so.split(' ')[0]);
-          return isValid(itemDate) && itemDate >= dateRange.from! && itemDate <= dateRange.to!;
-        } catch (e) {
-          return false;
+            const { units, tests, minDate: min, maxDate: max } = await getInitialDashboardState();
+            setAllUnits(units);
+            setAllTestNames(tests);
+
+            if (min && max) {
+                const minD = parseISO(min);
+                const maxD = parseISO(max);
+                if(isValid(minD) && isValid(maxD)) {
+                    setMinDate(minD);
+                    setMaxDate(maxD);
+                    setDateRange({ from: minD, to: maxD });
+                    const totalDays = differenceInDays(maxD, minD);
+                    setSliderRange([0, totalDays > 0 ? totalDays : 100]);
+                }
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Could not load initial data' });
         }
-      });
     }
+    loadInitialState();
+  }, [toast]);
 
-    // Unit filtering
-    if (!selectedUnits.includes('all') && selectedUnits.length > 0) {
-        newFilteredData = newFilteredData.filter(item => 
-            item.ten_don_vi && selectedUnits.includes(item.ten_don_vi)
-        );
-    }
-
-    // Test name filtering
-    if (!selectedTestNames.includes('all') && selectedTestNames.length > 0) {
-        newFilteredData = newFilteredData.filter(item => 
-            item.ten_xet_nghiem && selectedTestNames.includes(item.ten_xet_nghiem)
-        );
-    }
-
-    // isMindray filtering
-    if (isMindrayOnly) {
-        newFilteredData = newFilteredData.filter(item => {
-            const value = item.isMindray;
-            return value === true || value === 1 || String(value).toLowerCase() === 'true' || String(value) === '1';
-        });
+  // Fetch dashboard data when filters change
+  useEffect(() => {
+    if (!dateRange?.from || !dateRange?.to) {
+        return;
     }
     
-    setFilteredData(newFilteredData);
-  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, data, isLoading]);
+    async function fetchData() {
+        setIsLoading(true);
+        try {
+            const { dailyCounts, unitCounts } = await getDashboardData(
+                dateRange!,
+                selectedUnits,
+                selectedTestNames,
+                isMindrayOnly
+            );
+            setDailyCounts(dailyCounts.map(d => ({ ...d, date: d.date.split('T')[0] })));
+            setUnitCounts(unitCounts);
+        } catch (error) {
+            console.error(error);
+            toast({
+                variant: 'destructive',
+                title: 'Failed to fetch dashboard data',
+                description: 'Could not load data for the selected filters.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchData();
+  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, toast]);
 
 
   const handleSliderChange = (value: number[]) => {
@@ -184,8 +159,9 @@ export function Dashboard() {
         const fromDay = differenceInDays(newRange.from, minDate);
         const toDay = differenceInDays(newRange.to, minDate);
         // Ensure slider values are within bounds
+        const totalDays = differenceInDays(maxDate, minDate);
         const newSliderFrom = Math.max(0, fromDay);
-        const newSliderTo = Math.min(differenceInDays(maxDate, minDate), toDay);
+        const newSliderTo = Math.min(totalDays, toDay);
         setSliderRange([newSliderFrom, newSliderTo]);
     }
     setDateRange(newRange);
@@ -231,65 +207,10 @@ export function Dashboard() {
     });
   };
   
-  const dailyCounts = useMemo(() => {
-    const counts: { [key: string]: { total: number; mindray: number } } = {};
-    filteredData.forEach(item => {
-      if (item.ngay_vao_so) {
-        try {
-          const date = item.ngay_vao_so.split(' ')[0];
-          if (isValid(parseISO(date))) {
-            const formattedDate = format(parseISO(date), 'yyyy-MM-dd');
-            if (!counts[formattedDate]) {
-              counts[formattedDate] = { total: 0, mindray: 0 };
-            }
-            counts[formattedDate].total += 1;
-            const isMindray = item.isMindray === true || item.isMindray === 1 || String(item.isMindray).toLowerCase() === 'true' || String(item.isMindray) === '1';
-            if (isMindray) {
-              counts[formattedDate].mindray += 1;
-            }
-          }
-        } catch(e) {
-          // ignore
-        }
-      }
-    });
-
-    return Object.keys(counts).map(date => ({
-      date,
-      total: counts[date].total,
-      mindray: counts[date].mindray,
-    })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [filteredData]);
-
-  const unitCounts = useMemo(() => {
-    const counts: { [key: string]: number } = {};
-    filteredData.forEach(item => {
-      if (item.ten_don_vi) {
-        counts[item.ten_don_vi] = (counts[item.ten_don_vi] || 0) + 1;
-      }
-    });
-
-    return Object.keys(counts).map(unitName => ({
-      name: unitName,
-      value: counts[unitName]
-    })).sort((a,b) => b.value - a.value);
-  }, [filteredData]);
-
-
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
   
-  if (!isClient) {
-    return (
-      <div className="flex min-h-screen w-full flex-col">
-        <DashboardHeader />
-        <main className="flex-1 p-4 md:p-8 space-y-8">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-            <TotalTestsChart data={[]} isLoading={true} />
-            <UnitDistributionChart data={[]} isLoading={true} />
-          </div>
-        </main>
-      </div>
-    )
+  if (!isClient || !dateRange) {
+    return <InitialLoadingSkeleton />;
   }
 
   return (
