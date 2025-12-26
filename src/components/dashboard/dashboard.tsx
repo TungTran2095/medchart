@@ -1,32 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { getDashboardData, getInitialDashboardState } from '@/app/actions';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '@/components/icons';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
-import { addDays, differenceInDays, format, parseISO, isValid } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ListFilter } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { UnitFilter } from './unit-filter';
+import { TestFilter } from './test-filter';
+import { DateFilter } from './date-filter';
 import { TotalTestsChart } from './total-tests-chart';
 import { UnitDistributionChart } from './unit-distribution-chart';
 import { TestDistributionBarChart } from './test-distribution-bar-chart';
-import { Skeleton } from '../ui/skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Checkbox } from '../ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  supabase,
+  type DateRange as ApiDateRange,
+  type DailyTestCount,
+  type Distribution,
+} from '@/lib/supabase';
+import { DateRange } from 'react-day-picker';
+import { format, parseISO } from 'date-fns';
 
 function DashboardHeader() {
   return (
@@ -39,376 +30,317 @@ function DashboardHeader() {
   );
 }
 
-function InitialLoadingSkeleton() {
-    return (
-        <div className="flex min-h-screen w-full flex-col">
-          <DashboardHeader />
-          <main className="flex-1 p-4 md:p-8 space-y-8">
-            <div className='flex flex-col md:flex-row gap-4 items-center'>
-                <Skeleton className="h-10 w-32" />
-                <Skeleton className="h-10 w-32" />
-                <Skeleton className="h-10 w-32" />
-                <Skeleton className="h-10 w-72" />
-                <div className="flex-1 w-full md:w-auto">
-                    <div className="flex items-center gap-4">
-                        <Label>Khoảng ngày</Label>
-                        <Skeleton className="h-5 w-full" />
-                    </div>
-                </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-              <TotalTestsChart data={[]} isLoading={true} />
-              <UnitDistributionChart data={[]} isLoading={true} />
-            </div>
-          </main>
-        </div>
-      )
-}
-
 export function Dashboard() {
-  const [isClient, setIsClient] = useState(false);
-  const [dailyCounts, setDailyCounts] = useState<any[]>([]);
-  const [unitCounts, setUnitCounts] = useState<any[]>([]);
-  const [testCounts, setTestCounts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  // States cho data
+  const [apiDateRange, setApiDateRange] = useState<ApiDateRange | null>(null); // Min/max từ DB
+  const [dailyTestCounts, setDailyTestCounts] = useState<DailyTestCount[]>([]);
+  const [unitDistribution, setUnitDistribution] = useState<Distribution[]>([]);
+  const [testDistribution, setTestDistribution] = useState<Distribution[]>([]);
+  const [allUnits, setAllUnits] = useState<string[]>([]); // Danh sách đơn vị từ bảng mindray_donvi
+  const [allTests, setAllTests] = useState<string[]>([]); // Danh sách xét nghiệm từ bảng mindray_tenxn
+  
+  // States cho loading
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isLoadingUnits, setIsLoadingUnits] = useState(true);
+  const [isLoadingTests, setIsLoadingTests] = useState(true);
+  const [isLoadingDateRange, setIsLoadingDateRange] = useState(true);
+  
+  // State cho filter
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Date range states
-  const [minDate, setMinDate] = useState<Date | undefined>();
-  const [maxDate, setMaxDate] = useState<Date | undefined>();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [sliderRange, setSliderRange] = useState([0, 100]);
-
-  // Unit filter states
-  const [allUnits, setAllUnits] = useState<string[]>([]);
-  const [selectedUnits, setSelectedUnits] = useState<string[]>(['all']);
-
-  // Test name filter states
-  const [allTestNames, setAllTestNames] = useState<string[]>([]);
-  const [selectedTestNames, setSelectedTestNames] = useState<string[]>(['all']);
-
-  // isMindray filter state
-  const [isMindrayOnly, setIsMindrayOnly] = useState(false);
-
-  // Initial data loading
+  // Fetch danh sách đơn vị từ RPC function get_all_units
   useEffect(() => {
-    setIsClient(true);
-    async function loadInitialState() {
-        try {
-            const { units, tests, minDate: min, maxDate: max } = await getInitialDashboardState();
-            // Normalize và filter các items có encoding issues
-            const normalizeText = (text: string) => {
-              if (!text) return '';
-              // Loại bỏ các ký tự replacement character (U+FFFD - diamond question mark)
-              return text.replace(/\uFFFD/g, '').trim();
-            };
-            
-            // Filter và deduplicate units
-            const validUnits = units
-              .map(normalizeText)
-              .filter(u => u.length > 0) // Loại bỏ empty strings
-              .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
-            
-            // Filter và deduplicate tests
-            const validTests = tests
-              .map(normalizeText)
-              .filter(t => t.length > 0) // Loại bỏ empty strings
-              .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
-            
-            setAllUnits(validUnits);
-            setAllTestNames(validTests);
+    async function fetchUnits() {
+      try {
+        setIsLoadingUnits(true);
+        
+        const { data, error } = await supabase.rpc('get_all_units');
 
-            if (min && max) {
-                const minD = parseISO(min);
-                const maxD = parseISO(max);
-                if(isValid(minD) && isValid(maxD)) {
-                    setMinDate(minD);
-                    setMaxDate(maxD);
-                    setDateRange({ from: minD, to: maxD });
-                    const totalDays = differenceInDays(maxD, minD);
-                    setSliderRange([0, totalDays > 0 ? totalDays : 100]);
-                }
-            }
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Could not load initial data' });
+        console.log('get_all_units result:', { data, error });
+
+        if (error) {
+          console.error('get_all_units error details:', error.message, error.code, error.details);
+          throw error;
         }
-    }
-    loadInitialState();
-  }, [toast]);
 
-  // Fetch dashboard data when filters change
+        // Extract unit names
+        const unitNames = data
+          ?.map((item: { ten_don_vi: string }) => item.ten_don_vi)
+          .filter((name: string | null): name is string => !!name) || [];
+        
+        console.log('Loaded units:', unitNames.length);
+        setAllUnits(unitNames);
+      } catch (error) {
+        console.error('Error fetching units:', error);
+      } finally {
+        setIsLoadingUnits(false);
+      }
+    }
+
+    fetchUnits();
+  }, []);
+
+  // Fetch danh sách xét nghiệm từ RPC function get_all_tests
   useEffect(() => {
-    if (!dateRange?.from || !dateRange?.to) {
-        return;
-    }
-    
-    async function fetchData() {
-        setIsLoading(true);
-        try {
-            const { dailyCounts, unitCounts, testCounts } = await getDashboardData(
-                dateRange!,
-                selectedUnits,
-                selectedTestNames,
-                isMindrayOnly
-            );
-            
-            console.log('Dashboard received data:', {
-                dailyCountsLength: dailyCounts?.length || 0,
-                unitCountsLength: unitCounts?.length || 0,
-                testCountsLength: testCounts?.length || 0,
-                dailyCounts: dailyCounts,
-                unitCounts: unitCounts,
-                testCounts: testCounts
-            });
-
-            // Xử lý dailyCounts - đảm bảo date là string và format đúng
-            const processedDailyCounts = (dailyCounts || []).map((d: any) => {
-                const dateStr = d.date || '';
-                return {
-                    ...d,
-                    date: dateStr.includes('T') ? dateStr.split('T')[0] : dateStr,
-                    total: Number(d.total) || 0,
-                    mindray: Number(d.mindray) || 0
-                };
-            });
-
-            // Xử lý unitCounts - đảm bảo value là number
-            const processedUnitCounts = (unitCounts || []).map((u: any) => ({
-                name: u.name || '',
-                value: Number(u.value) || 0
-            }));
-
-            // Xử lý testCounts - đảm bảo value là number
-            const processedTestCounts = (testCounts || []).map((t: any) => ({
-                name: t.name || '',
-                value: Number(t.value) || 0
-            }));
-
-            setDailyCounts(processedDailyCounts);
-            setUnitCounts(processedUnitCounts);
-            setTestCounts(processedTestCounts);
-        } catch (error) {
-            console.error('Error in fetchData:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Failed to fetch dashboard data',
-                description: 'Could not load data for the selected filters.',
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    }
-    fetchData();
-  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, toast]);
-
-
-  const handleSliderChange = (value: number[]) => {
-    if (minDate) {
-      const newFrom = addDays(minDate, value[0]);
-      const newTo = addDays(minDate, value[1]);
-      setDateRange({ from: newFrom, to: newTo });
-      setSliderRange(value);
-    }
-  };
-  
-  const handleDateRangeChange = (newRange: DateRange | undefined) => {
-    if (newRange?.from && newRange?.to && minDate && maxDate) {
-        const fromDay = differenceInDays(newRange.from, minDate);
-        const toDay = differenceInDays(newRange.to, minDate);
-        // Ensure slider values are within bounds
-        const totalDays = differenceInDays(maxDate, minDate);
-        const newSliderFrom = Math.max(0, fromDay);
-        const newSliderTo = Math.min(totalDays, toDay);
-        setSliderRange([newSliderFrom, newSliderTo]);
-    }
-    setDateRange(newRange);
-  }
-
-  const handleUnitSelection = (unit: string) => {
-    setSelectedUnits(prev => {
-        if (unit === 'all') {
-            return prev.includes('all') ? [] : ['all'];
-        }
-
-        let newSelection = prev.filter(u => u !== 'all');
-
-        if (newSelection.includes(unit)) {
-            newSelection = newSelection.filter(u => u !== unit);
-        } else {
-            newSelection.push(unit);
-        }
+    async function fetchTests() {
+      try {
+        setIsLoadingTests(true);
         
-        if (newSelection.length === 0 || newSelection.length === allUnits.length) return ['all'];
+        const { data, error } = await supabase.rpc('get_all_tests');
 
-        return newSelection;
-    });
-  };
+        console.log('get_all_tests result:', { data, error });
 
-  const handleTestNameSelection = (testName: string) => {
-    setSelectedTestNames(prev => {
-        if (testName === 'all') {
-            return prev.includes('all') ? [] : ['all'];
+        if (error) {
+          console.error('get_all_tests error details:', error.message, error.code, error.details);
+          throw error;
         }
 
-        let newSelection = prev.filter(t => t !== 'all');
-
-        if (newSelection.includes(testName)) {
-            newSelection = newSelection.filter(t => t !== testName);
-        } else {
-            newSelection.push(testName);
-        }
+        // Extract test names
+        const testNames = data
+          ?.map((item: { ten_xn: string }) => item.ten_xn)
+          .filter((name: string | null): name is string => !!name) || [];
         
-        if (newSelection.length === 0 || newSelection.length === allTestNames.length) return ['all'];
+        console.log('Loaded tests:', testNames.length);
+        setAllTests(testNames);
+      } catch (error) {
+        console.error('Error fetching tests:', error);
+      } finally {
+        setIsLoadingTests(false);
+      }
+    }
 
-        return newSelection;
-    });
-  };
-  
-  const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
-  
-  if (!isClient || !dateRange) {
-    return <InitialLoadingSkeleton />;
-  }
+    fetchTests();
+  }, []);
+
+  // Fetch date range khi mount
+  useEffect(() => {
+    async function fetchDateRange() {
+      try {
+        setIsLoadingDateRange(true);
+        const dateRangeResult = await supabase.rpc('get_date_range');
+
+        if (dateRangeResult.error) throw dateRangeResult.error;
+
+        setApiDateRange(dateRangeResult.data);
+        
+        // Set default selected date range to full range
+        if (dateRangeResult.data) {
+          setSelectedDateRange({
+            from: parseISO(dateRangeResult.data.minDate),
+            to: parseISO(dateRangeResult.data.maxDate),
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching date range:', error);
+      } finally {
+        setIsLoadingDateRange(false);
+      }
+    }
+
+    fetchDateRange();
+  }, []);
+
+  // Tính toán effective date range cho API calls
+  const effectiveDateRange = useMemo(() => {
+    if (selectedDateRange?.from && selectedDateRange?.to) {
+      return {
+        startDate: format(selectedDateRange.from, 'yyyy-MM-dd'),
+        endDate: format(selectedDateRange.to, 'yyyy-MM-dd'),
+      };
+    }
+    if (apiDateRange) {
+      return {
+        startDate: apiDateRange.minDate,
+        endDate: apiDateRange.maxDate,
+      };
+    }
+    return null;
+  }, [selectedDateRange, apiDateRange]);
+
+  // Fetch chart data khi có date range
+  useEffect(() => {
+    async function fetchChartData() {
+      if (!effectiveDateRange) return;
+
+      try {
+        setIsLoadingData(true);
+
+        // Fetch dữ liệu với date range đã chọn
+        const [dailyResult, unitResult, testResult] = await Promise.all([
+          supabase.rpc('get_daily_test_counts', {
+            start_date: effectiveDateRange.startDate,
+            end_date: effectiveDateRange.endDate,
+            filter_units: null,
+            filter_tests: null,
+            mindray_only: false,
+          }),
+          supabase.rpc('get_unit_distribution', {
+            start_date: effectiveDateRange.startDate,
+            end_date: effectiveDateRange.endDate,
+            filter_units: null,
+            filter_tests: null,
+            mindray_only: false,
+          }),
+          supabase.rpc('get_test_distribution', {
+            start_date: effectiveDateRange.startDate,
+            end_date: effectiveDateRange.endDate,
+            filter_units: null,
+            filter_tests: null,
+            mindray_only: false,
+          }),
+        ]);
+
+        if (dailyResult.error) throw dailyResult.error;
+        if (unitResult.error) throw unitResult.error;
+        if (testResult.error) throw testResult.error;
+
+        setDailyTestCounts(dailyResult.data || []);
+        setUnitDistribution(unitResult.data || []);
+        setTestDistribution(testResult.data || []);
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    }
+
+    fetchChartData();
+  }, [effectiveDateRange]);
+
+  // Client-side filtering cho Unit Distribution
+  const filteredUnitDistribution = useMemo(() => {
+    if (selectedUnits.length === 0) {
+      return unitDistribution;
+    }
+    return unitDistribution.filter((item) => selectedUnits.includes(item.name));
+  }, [unitDistribution, selectedUnits]);
+
+  // Client-side filtering cho Test Distribution
+  const filteredTestDistribution = useMemo(() => {
+    if (selectedTests.length === 0) {
+      return testDistribution;
+    }
+    return testDistribution.filter((item) => selectedTests.includes(item.name));
+  }, [testDistribution, selectedTests]);
+
+  // Tính toán tổng số từ filtered data
+  const filteredTotals = useMemo(() => {
+    const totalTests = filteredUnitDistribution.reduce((sum, item) => sum + item.value, 0);
+    const totalUnits = filteredUnitDistribution.length;
+    const totalTestTypes = filteredTestDistribution.length;
+    return { totalTests, totalUnits, totalTestTypes };
+  }, [filteredUnitDistribution, filteredTestDistribution]);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
       <DashboardHeader />
-      <main className="flex-1 p-4 md:p-8 space-y-8">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <ListFilter className="h-4 w-4" />
-                  <span>Đơn vị</span>
-                  {selectedUnits.length > 0 && !selectedUnits.includes('all') && (
-                    <span className="ml-2 rounded-full bg-primary px-2 text-xs text-primary-foreground">
-                      {selectedUnits.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="start">
-                <div className="p-4 border-b">
-                  <h4 className="font-medium">Lọc theo đơn vị</h4>
-                </div>
-                <ScrollArea className="h-64">
-                  <div className="p-2 space-y-2">
-                    <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                         onClick={() => handleUnitSelection('all')}>
-                      <Checkbox
-                        checked={selectedUnits.includes('all')}
-                        onCheckedChange={() => handleUnitSelection('all')}
-                      />
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1">
-                        Tất cả
-                      </label>
-                    </div>
-                    {allUnits.map(unit => (
-                      <div 
-                        key={unit}
-                        className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                        onClick={() => !selectedUnits.includes('all') && handleUnitSelection(unit)}
-                      >
-                        <Checkbox
-                          checked={selectedUnits.includes(unit)}
-                          onCheckedChange={() => handleUnitSelection(unit)}
-                          disabled={selectedUnits.includes('all')}
-                        />
-                        <label className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 break-words">
-                          {unit || ''}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <ListFilter className="h-4 w-4" />
-                  <span>Xét nghiệm</span>
-                  {selectedTestNames.length > 0 && !selectedTestNames.includes('all') && (
-                    <span className="ml-2 rounded-full bg-primary px-2 text-xs text-primary-foreground">
-                      {selectedTestNames.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="start">
-                <div className="p-4 border-b">
-                  <h4 className="font-medium">Lọc theo xét nghiệm</h4>
-                </div>
-                <ScrollArea className="h-64">
-                  <div className="p-2 space-y-2">
-                    <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                         onClick={() => handleTestNameSelection('all')}>
-                      <Checkbox
-                        checked={selectedTestNames.includes('all')}
-                        onCheckedChange={() => handleTestNameSelection('all')}
-                      />
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1">
-                        Tất cả
-                      </label>
-                    </div>
-                    {allTestNames.map(name => (
-                      <div 
-                        key={name}
-                        className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                        onClick={() => !selectedTestNames.includes('all') && handleTestNameSelection(name)}
-                      >
-                        <Checkbox
-                          checked={selectedTestNames.includes(name)}
-                          onCheckedChange={() => handleTestNameSelection(name)}
-                          disabled={selectedTestNames.includes('all')}
-                        />
-                        <label className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 break-words">
-                          {name || ''}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
-            
-            <div className="flex items-center space-x-2">
-              <Switch id="mindray-switch" checked={isMindrayOnly} onCheckedChange={setIsMindrayOnly} />
-              <Label htmlFor="mindray-switch">Only Mindray</Label>
+      <main className="flex-1 p-4 md:p-8 space-y-6">
+        {/* Filter Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bộ lọc</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-3">
+              <DateFilter
+                dateRange={selectedDateRange}
+                onDateRangeChange={setSelectedDateRange}
+                minDate={apiDateRange?.minDate}
+                maxDate={apiDateRange?.maxDate}
+                isLoading={isLoadingDateRange}
+              />
+              <UnitFilter
+                units={allUnits}
+                selectedUnits={selectedUnits}
+                onSelectionChange={setSelectedUnits}
+                isLoading={isLoadingUnits}
+              />
+              <TestFilter
+                tests={allTests}
+                selectedTests={selectedTests}
+                onSelectionChange={setSelectedTests}
+                isLoading={isLoadingTests}
+              />
             </div>
+          </CardContent>
+        </Card>
 
-          <DateRangePicker
-            date={dateRange}
-            onDateChange={handleDateRangeChange}
-            disabled={isLoading || !minDate}
+        {/* Summary Stats */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Tổng số xét nghiệm
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingData ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {filteredTotals.totalTests.toLocaleString('vi-VN')}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Số đơn vị
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingData ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {filteredTotals.totalUnits}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Khoảng thời gian đã chọn
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!effectiveDateRange ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <div className="text-sm font-medium">
+                  {effectiveDateRange.startDate} → {effectiveDateRange.endDate}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Unit Distribution Chart - áp dụng filter */}
+          <UnitDistributionChart
+            data={filteredUnitDistribution}
+            isLoading={isLoadingData}
           />
-          <div className="flex-1 w-full md:w-auto">
-            {minDate && maxDate && (
-              <div className="flex items-center gap-4">
-                 <Label htmlFor="date-slider" className="min-w-fit">Khoảng ngày</Label>
-                 <Slider
-                    id="date-slider"
-                    min={0}
-                    max={totalDays > 0 ? totalDays : 100}
-                    value={sliderRange}
-                    onValueChange={handleSliderChange}
-                    disabled={isLoading || !minDate}
-                    className="w-full"
-                 />
-              </div>
-            )}
-          </div>
+
+          {/* Test Distribution Chart - áp dụng filter */}
+          <TestDistributionBarChart
+            data={filteredTestDistribution}
+            isLoading={isLoadingData}
+          />
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-          <TotalTestsChart data={dailyCounts} isLoading={isLoading} />
-          <UnitDistributionChart data={unitCounts} isLoading={isLoading} />
-        </div>
-        
-        <div className="w-full">
-          <TestDistributionBarChart data={testCounts} isLoading={isLoading} />
-        </div>
+
+        {/* Daily Trends Chart */}
+        <TotalTestsChart
+          data={dailyTestCounts}
+          isLoading={isLoadingData}
+        />
       </main>
     </div>
   );

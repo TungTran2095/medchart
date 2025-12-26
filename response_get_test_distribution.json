@@ -1,0 +1,810 @@
+﻿[
+    {
+        "name":  "ALT (Alinity c)*",
+        "value":  10030
+    },
+    {
+        "name":  "AST (Alinity c)*",
+        "value":  9939
+    },
+    {
+        "name":  "Creatinin máu (Enzymatic-Alinity c)*",
+        "value":  9711
+    },
+    {
+        "name":  "Cholesterol (Alinity c)*",
+        "value":  9104
+    },
+    {
+        "name":  "Triglyceride (Alinity c)*",
+        "value":  8819
+    },
+    {
+        "name":  "Glucose máu (Alinity c)*",
+        "value":  8513
+    },
+    {
+        "name":  "Ure máu (Alinity c)*",
+        "value":  8300
+    },
+    {
+        "name":  "Glucose máu (Cobas c503)*",
+        "value":  7920
+    },
+    {
+        "name":  "Uric acid máu (Alinity c)*",
+        "value":  6479
+    },
+    {
+        "name":  "HDL-Cholesterol (Alinity c)",
+        "value":  6418
+    },
+    {
+        "name":  "ALT (Cobas c503)*",
+        "value":  5972
+    },
+    {
+        "name":  "AST (Cobas c503)*",
+        "value":  5971
+    },
+    {
+        "name":  "Cholesterol (Cobas c503)*",
+        "value":  5845
+    },
+    {
+        "name":  "Triglyceride (Cobas c503)*",
+        "value":  5838
+    },
+    {
+        "name":  "Creatinin máu (Enzymatic-Cobas c503)*",
+        "value":  5815
+    },
+    {
+        "name":  "Ure máu (Cobas c503)*",
+        "value":  4472
+    },
+    {
+        "name":  "Uric acid máu (Cobas c503)*",
+        "value":  4201
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas c503)",
+        "value":  3482
+    },
+    {
+        "name":  "Calci máu (Alinity c)",
+        "value":  1956
+    },
+    {
+        "name":  "Calci máu (Cobas c503)",
+        "value":  1772
+    },
+    {
+        "name":  "ALT (M1000)",
+        "value":  1223
+    },
+    {
+        "name":  "AST (M1000)",
+        "value":  1211
+    },
+    {
+        "name":  "Creatinin máu (M1000)",
+        "value":  1206
+    },
+    {
+        "name":  "Ure máu (M1000)",
+        "value":  1203
+    },
+    {
+        "name":  "Cholesterol (M1000)",
+        "value":  1075
+    },
+    {
+        "name":  "Glucose máu (M1000)",
+        "value":  1051
+    },
+    {
+        "name":  "Triglyceride (M1000)",
+        "value":  1045
+    },
+    {
+        "name":  "ALT (Cobas 8000)*",
+        "value":  1039
+    },
+    {
+        "name":  "Sắt huyết thanh (Alinity c)",
+        "value":  1038
+    },
+    {
+        "name":  "AST (Cobas 8000)*",
+        "value":  1038
+    },
+    {
+        "name":  "Creatinin máu (Cobas 8000)",
+        "value":  1037
+    },
+    {
+        "name":  "Glucose máu (Cobas 8000)*",
+        "value":  1029
+    },
+    {
+        "name":  "Cholesterol (Cobas 8000)*",
+        "value":  896
+    },
+    {
+        "name":  "Triglyceride (Cobas 8000)*",
+        "value":  893
+    },
+    {
+        "name":  "HDL-Cholesterol (M1000)",
+        "value":  714
+    },
+    {
+        "name":  "Ure máu (Cobas 8000)",
+        "value":  673
+    },
+    {
+        "name":  "AST (Cobas)*",
+        "value":  672
+    },
+    {
+        "name":  "ALT (Cobas)*",
+        "value":  672
+    },
+    {
+        "name":  "Glucose máu (Cobas)*",
+        "value":  671
+    },
+    {
+        "name":  "Cholesterol (Cobas)*",
+        "value":  651
+    },
+    {
+        "name":  "Triglyceride (Cobas)*",
+        "value":  642
+    },
+    {
+        "name":  "Ure máu (Cobas)*",
+        "value":  623
+    },
+    {
+        "name":  "Creatinin máu (Cobas)*",
+        "value":  618
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas)",
+        "value":  616
+    },
+    {
+        "name":  "Uric acid máu (Cobas)*",
+        "value":  596
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas 8000)",
+        "value":  550
+    },
+    {
+        "name":  "Uric acid máu (M1000)",
+        "value":  509
+    },
+    {
+        "name":  "Calci máu (Cobas)",
+        "value":  476
+    },
+    {
+        "name":  "Uric acid máu (Cobas 8000)",
+        "value":  448
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Alinity c)",
+        "value":  437
+    },
+    {
+        "name":  "Bilirubin toàn phần (Alinity c)*",
+        "value":  388
+    },
+    {
+        "name":  "Sắt huyết thanh (Cobas 6000)",
+        "value":  340
+    },
+    {
+        "name":  "Creatinin máu (Cobas 6000)",
+        "value":  293
+    },
+    {
+        "name":  "Triglyceride (Cobas)",
+        "value":  208
+    },
+    {
+        "name":  "Creatinin máu (Cobas)",
+        "value":  208
+    },
+    {
+        "name":  "Sắt huyết thanh (M1000)",
+        "value":  202
+    },
+    {
+        "name":  "Glucose máu (Cobas)",
+        "value":  202
+    },
+    {
+        "name":  "ALT (Cobas)",
+        "value":  201
+    },
+    {
+        "name":  "AST (Cobas)",
+        "value":  201
+    },
+    {
+        "name":  "Cholesterol (Cobas)",
+        "value":  197
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas c503)",
+        "value":  181
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas c503)*",
+        "value":  180
+    },
+    {
+        "name":  "Cholesterol(Cobas 6000)*",
+        "value":  175
+    },
+    {
+        "name":  "AST (GOT)(Cobas 6000)*",
+        "value":  175
+    },
+    {
+        "name":  "ALT (GPT)(Cobas 6000)*",
+        "value":  175
+    },
+    {
+        "name":  "Triglyceride(Cobas 6000)*",
+        "value":  175
+    },
+    {
+        "name":  "Glucose máu (TN)(Cobas 6000)*",
+        "value":  175
+    },
+    {
+        "name":  "Ure máu (Cobas 8000)*",
+        "value":  174
+    },
+    {
+        "name":  "Calci máu (Cobas 8000)",
+        "value":  161
+    },
+    {
+        "name":  "Albumin máu (Alinity c)",
+        "value":  154
+    },
+    {
+        "name":  "Uric acid máu (Cobas)",
+        "value":  136
+    },
+    {
+        "name":  "AST (Cobas 6000)*",
+        "value":  115
+    },
+    {
+        "name":  "ALT (Cobas 6000)*",
+        "value":  115
+    },
+    {
+        "name":  "Glucose máu (Cobas 6000)*",
+        "value":  105
+    },
+    {
+        "name":  "Uric acid máu(Cobas 6000)*",
+        "value":  96
+    },
+    {
+        "name":  "Ure máu (Cobas 6000)*",
+        "value":  96
+    },
+    {
+        "name":  "HDL-Cholesterol(Cobas 6000)*",
+        "value":  95
+    },
+    {
+        "name":  "Uric acid máu (Cobas 8000)*",
+        "value":  77
+    },
+    {
+        "name":  "Sắt huyết thanh (Cobas 8000)",
+        "value":  63
+    },
+    {
+        "name":  "AST (Cobas C502)*",
+        "value":  56
+    },
+    {
+        "name":  "Triglyceride (Cobas 6000)*",
+        "value":  53
+    },
+    {
+        "name":  "Cholesterol (Cobas 6000)*",
+        "value":  53
+    },
+    {
+        "name":  "ALT (Cobas C502)",
+        "value":  52
+    },
+    {
+        "name":  "Bilirubin toàn phần (Alinity c)",
+        "value":  49
+    },
+    {
+        "name":  "Uric acid máu (Cobas 6000)",
+        "value":  49
+    },
+    {
+        "name":  "Creatinin máu (Cobas) ",
+        "value":  46
+    },
+    {
+        "name":  "Ure máu ( Cobas )*",
+        "value":  46
+    },
+    {
+        "name":  "Creatinin máu (Alinity c)",
+        "value":  45
+    },
+    {
+        "name":  "Ure máu (Alinity c)",
+        "value":  44
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas 8000)",
+        "value":  43
+    },
+    {
+        "name":  "Calci máu (M1000)",
+        "value":  41
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas 8000)",
+        "value":  39
+    },
+    {
+        "name":  "Triglyceride (Alinity c)",
+        "value":  38
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas 6000)",
+        "value":  36
+    },
+    {
+        "name":  "Uric acid máu (Alinity c)",
+        "value":  36
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas)",
+        "value":  34
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas)",
+        "value":  34
+    },
+    {
+        "name":  "Bilirubin toàn phần (M1000)",
+        "value":  31
+    },
+    {
+        "name":  "Bilirubin trực tiếp (M1000)",
+        "value":  30
+    },
+    {
+        "name":  "Albumin máu (Cobas c503)",
+        "value":  25
+    },
+    {
+        "name":  "Cholesterol(Cobas 6000)",
+        "value":  23
+    },
+    {
+        "name":  "AST (GOT)(Cobas 6000)",
+        "value":  23
+    },
+    {
+        "name":  "ALT (GPT)(Cobas 6000)",
+        "value":  23
+    },
+    {
+        "name":  "Glucose máu (TN)(Cobas 6000)",
+        "value":  23
+    },
+    {
+        "name":  "Triglyceride(Cobas 6000)",
+        "value":  23
+    },
+    {
+        "name":  "HDL-Cholesterol(Cobas 6000)",
+        "value":  20
+    },
+    {
+        "name":  "Ure máu (Cobas)",
+        "value":  20
+    },
+    {
+        "name":  "Creatinin máu (Cobas 8000)*",
+        "value":  18
+    },
+    {
+        "name":  "Sắt huyết thanh (Cobas)",
+        "value":  16
+    },
+    {
+        "name":  "Creatinin máu (Cobas C502)",
+        "value":  16
+    },
+    {
+        "name":  "Calci máu(Cobas 6000)",
+        "value":  15
+    },
+    {
+        "name":  "Ure máu(Cobas 6000)",
+        "value":  14
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas 6000)",
+        "value":  13
+    },
+    {
+        "name":  "Calci máu (Cobas 8000)*",
+        "value":  13
+    },
+    {
+        "name":  "Triglyceride (Cobas C502)*",
+        "value":  12
+    },
+    {
+        "name":  "Creatinin máu (Cobas 6000)*",
+        "value":  12
+    },
+    {
+        "name":  "Calci máu (Cobas C502)",
+        "value":  12
+    },
+    {
+        "name":  "ALT (Cobas 8000)",
+        "value":  11
+    },
+    {
+        "name":  "AST (Cobas 8000)",
+        "value":  11
+    },
+    {
+        "name":  "Cholesterol (Cobas 8000)",
+        "value":  11
+    },
+    {
+        "name":  "Ure máu (Cobas 6000)",
+        "value":  11
+    },
+    {
+        "name":  "Glucose máu (Cobas 8000)",
+        "value":  11
+    },
+    {
+        "name":  "Triglyceride (Cobas 8000)",
+        "value":  11
+    },
+    {
+        "name":  "Creatinin máu (Cobas6000)",
+        "value":  10
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas6000)",
+        "value":  10
+    },
+    {
+        "name":  "ALT (Cobas C502)*",
+        "value":  10
+    },
+    {
+        "name":  "Uric acid máu (Cobas6000)",
+        "value":  10
+    },
+    {
+        "name":  "Cholesterol (Cobas6000)*",
+        "value":  10
+    },
+    {
+        "name":  "Ure máu (Cobas6000)*",
+        "value":  10
+    },
+    {
+        "name":  "Triglyceride (Cobas6000)*",
+        "value":  10
+    },
+    {
+        "name":  "Ure máu (Cobas C502)*",
+        "value":  10
+    },
+    {
+        "name":  "Glucose máu (Cobas6000)*",
+        "value":  10
+    },
+    {
+        "name":  "Uric acid máu(Cobas 6000)",
+        "value":  10
+    },
+    {
+        "name":  "Calci máu (Cobas6000)",
+        "value":  10
+    },
+    {
+        "name":  "ALT (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Ure máu(Cobas 6000)*",
+        "value":  9
+    },
+    {
+        "name":  "Albumin máu (M1000)",
+        "value":  9
+    },
+    {
+        "name":  "Glucose máu (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Uric acid máu(Cobas 8000)",
+        "value":  9
+    },
+    {
+        "name":  "Cholesterol (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "AST (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Triglyceride (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Ure máu (Cobas  6000)*",
+        "value":  9
+    },
+    {
+        "name":  "Ure máu (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Creatinin máu (Alinity)",
+        "value":  9
+    },
+    {
+        "name":  "Cholesterol (M1000)*",
+        "value":  9
+    },
+    {
+        "name":  "Calci máu (Cobas 6000)",
+        "value":  8
+    },
+    {
+        "name":  "Cholesterol (Cobas C502)",
+        "value":  8
+    },
+    {
+        "name":  "Glucose máu (Cobas C502)*",
+        "value":  7
+    },
+    {
+        "name":  "Ure máu (Cobas C502)",
+        "value":  6
+    },
+    {
+        "name":  "Uric acid máu (Alinity)",
+        "value":  6
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas C502)",
+        "value":  6
+    },
+    {
+        "name":  "HDL-Cholesterol (Alinity)",
+        "value":  6
+    },
+    {
+        "name":  "Cholesterol (Cobas C502)*",
+        "value":  5
+    },
+    {
+        "name":  "Albumin máu (Cobas 8000)",
+        "value":  5
+    },
+    {
+        "name":  "AST (Cobas C502)",
+        "value":  5
+    },
+    {
+        "name":  "Glucose máu (Cobas c502)*",
+        "value":  5
+    },
+    {
+        "name":  "Triglyceride (Cobas C502) (MED.QTXN.HSMD.201)*",
+        "value":  4
+    },
+    {
+        "name":  "ALT (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "AST (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas C502)",
+        "value":  4
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas C502)",
+        "value":  4
+    },
+    {
+        "name":  "Calci máu (Cobas C502)*",
+        "value":  4
+    },
+    {
+        "name":  "Cholesterol (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Cholesterol (Cobas C502) (MED.QTXN.HSMD.199)*",
+        "value":  4
+    },
+    {
+        "name":  "Creatinin máu (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Glucose máu (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Glucose máu (Cobas C502)",
+        "value":  4
+    },
+    {
+        "name":  "Glucose máu (M1000)*",
+        "value":  4
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas C502)*",
+        "value":  4
+    },
+    {
+        "name":  "Sắt huyết thanh (Cobas 8000)*",
+        "value":  4
+    },
+    {
+        "name":  "Triglyceride (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Ure máu (Architect)",
+        "value":  4
+    },
+    {
+        "name":  "Uric acid máu (Architect)*",
+        "value":  4
+    },
+    {
+        "name":  "Uric acid máu (Cobas C502) (MED.QTXN.HSMD.202)*",
+        "value":  4
+    },
+    {
+        "name":  "Uric acid máu (Cobas C502)*",
+        "value":  3
+    },
+    {
+        "name":  "Creatinin máu (Alinity c)*",
+        "value":  3
+    },
+    {
+        "name":  "Glucose máu (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "Creatinin máu (Alinity c) (MED.QTXN.HSMD.197)*",
+        "value":  2
+    },
+    {
+        "name":  "AST (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "AST (Alinity c) (MED.QTXN.HSMD.195)*",
+        "value":  2
+    },
+    {
+        "name":  "ALT (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "ALT (Alinity c) (MED.QTXN.HSMD.196)*",
+        "value":  2
+    },
+    {
+        "name":  "Ure máu (Alinity c) (MED.QTXN.HSMD.198)*",
+        "value":  2
+    },
+    {
+        "name":  "Albumin máu (Cobas C502)",
+        "value":  2
+    },
+    {
+        "name":  "Triglyceride (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "Cholesterol (Cobas 6000)",
+        "value":  2
+    },
+    {
+        "name":  "HDL-Cholesterol (Cobas 502)",
+        "value":  2
+    },
+    {
+        "name":  "Triglyceride (M1000)*",
+        "value":  1
+    },
+    {
+        "name":  "Sắt huyết thanh(Cobas 6000)",
+        "value":  1
+    },
+    {
+        "name":  "Ure máu (M1000)*",
+        "value":  1
+    },
+    {
+        "name":  "HDL-Cholesterol (Architect)",
+        "value":  1
+    },
+    {
+        "name":  "Uric acid máu",
+        "value":  1
+    },
+    {
+        "name":  "Uric acid máu  (Cobas 6000)",
+        "value":  1
+    },
+    {
+        "name":  "Creatinin máu (M1000)*",
+        "value":  1
+    },
+    {
+        "name":  "Cholesterol (Alinity c)",
+        "value":  1
+    },
+    {
+        "name":  "Bilirubin trực tiếp (Cobas C502)*",
+        "value":  1
+    },
+    {
+        "name":  "Uric acid m��u (Alinity c)*",
+        "value":  1
+    },
+    {
+        "name":  "Bilirubin toàn phần (M1000)*",
+        "value":  1
+    },
+    {
+        "name":  "Bilirubin toàn phần (Cobas C502)*",
+        "value":  1
+    },
+    {
+        "name":  "Albumin máu",
+        "value":  1
+    }
+]

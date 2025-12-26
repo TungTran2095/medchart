@@ -1,0 +1,2 @@
+-- File SQL đã được reset
+-- Thêm các functions mới ở đây

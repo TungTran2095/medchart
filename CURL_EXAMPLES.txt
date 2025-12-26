@@ -1,0 +1,196 @@
+===============================================
+SUPABASE API - CURL EXAMPLES
+===============================================
+
+Thông tin API:
+- URL: https://yofbdpzapeismxrcrfml.supabase.co
+- Method: POST
+- Headers bắt buộc:
+  * Content-Type: application/json
+  * apikey: YOUR_SUPABASE_ANON_KEY
+  * Authorization: Bearer YOUR_SUPABASE_ANON_KEY
+
+Để lấy API key, xem file .env.local:
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+
+===============================================
+1. GET_FILTER_OPTIONS
+===============================================
+Endpoint: /rest/v1/rpc/get_filter_options
+Mô tả: Lấy danh sách các giá trị filter (đơn vị và xét nghiệm)
+
+Request:
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_filter_options' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{}'
+
+Response Example:
+{
+  "units": ["Đơn vị A", "Đơn vị B", ...],
+  "tests": ["Xét nghiệm 1", "Xét nghiệm 2", ...]
+}
+
+===============================================
+2. GET_DATE_RANGE
+===============================================
+Endpoint: /rest/v1/rpc/get_date_range
+Mô tả: Lấy khoảng ngày min/max trong database
+
+Request:
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_date_range' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{}'
+
+Response Example:
+{
+  "minDate": "2025-12-01",
+  "maxDate": "2025-12-25"
+}
+
+===============================================
+3. GET_DAILY_TEST_COUNTS
+===============================================
+Endpoint: /rest/v1/rpc/get_daily_test_counts
+Mô tả: Lấy tổng số xét nghiệm và số xét nghiệm Mindray theo từng ngày
+
+Parameters:
+- start_date (string, required): Ngày bắt đầu (format: YYYY-MM-DD)
+- end_date (string, required): Ngày kết thúc (format: YYYY-MM-DD)
+- filter_units (array of strings | null): Danh sách đơn vị cần filter, null để lấy tất cả
+- filter_tests (array of strings | null): Danh sách xét nghiệm cần filter, null để lấy tất cả
+- mindray_only (boolean): true để chỉ lấy dữ liệu Mindray, false để lấy tất cả
+
+Request (không filter):
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_daily_test_counts' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{
+    "start_date": "2025-12-01",
+    "end_date": "2025-12-25",
+    "filter_units": null,
+    "filter_tests": null,
+    "mindray_only": false
+  }'
+
+Request (có filter):
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_daily_test_counts' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{
+    "start_date": "2025-12-01",
+    "end_date": "2025-12-25",
+    "filter_units": ["Hà Nội-Tây Hồ-Khám Sức Khỏe", "Hà Nội-Ba Đình-Khám Sức Khỏe"],
+    "filter_tests": ["ALT (Alinity c)*"],
+    "mindray_only": true
+  }'
+
+Response Example:
+[
+  {
+    "date": "2025-12-01",
+    "total": 3955,
+    "mindray": 639
+  },
+  {
+    "date": "2025-12-02",
+    "total": 8669,
+    "mindray": 2856
+  },
+  ...
+]
+
+===============================================
+4. GET_UNIT_DISTRIBUTION
+===============================================
+Endpoint: /rest/v1/rpc/get_unit_distribution
+Mô tả: Lấy số lượng xét nghiệm theo từng đơn vị
+
+Parameters: (giống như get_daily_test_counts)
+
+Request:
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_unit_distribution' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{
+    "start_date": "2025-12-01",
+    "end_date": "2025-12-25",
+    "filter_units": null,
+    "filter_tests": null,
+    "mindray_only": false
+  }'
+
+Response Example:
+[
+  {
+    "name": "Hà Nội-Tây Hồ-Khám Sức Khỏe",
+    "value": 57096
+  },
+  {
+    "name": "Hà Nội-Ba Đình-Khám Sức Khỏe",
+    "value": 55468
+  },
+  ...
+]
+
+===============================================
+5. GET_TEST_DISTRIBUTION
+===============================================
+Endpoint: /rest/v1/rpc/get_test_distribution
+Mô tả: Lấy số lượng xét nghiệm theo từng loại xét nghiệm (ten_xet_nghiem)
+
+Parameters: (giống như get_daily_test_counts)
+
+Request:
+curl -X POST 'https://yofbdpzapeismxrcrfml.supabase.co/rest/v1/rpc/get_test_distribution' \
+  -H 'Content-Type: application/json' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_ANON_KEY' \
+  -d '{
+    "start_date": "2025-12-01",
+    "end_date": "2025-12-25",
+    "filter_units": null,
+    "filter_tests": null,
+    "mindray_only": false
+  }'
+
+Response Example:
+[
+  {
+    "name": "ALT (Alinity c)*",
+    "value": 10030
+  },
+  {
+    "name": "AST (Alinity c)*",
+    "value": 9939
+  },
+  ...
+]
+
+===============================================
+LƯU Ý QUAN TRỌNG
+===============================================
+1. Thay thế YOUR_SUPABASE_ANON_KEY bằng API key thực tế từ .env.local
+2. Tất cả các API đều sử dụng method POST
+3. Format date: YYYY-MM-DD (ví dụ: 2025-12-25)
+4. filter_units và filter_tests có thể là null (JSON null) hoặc array of strings
+5. mindray_only là boolean (true hoặc false)
+6. Response trả về JSON array hoặc JSON object tùy theo từng API
+
+===============================================
+TEST NHANH VỚI SCRIPT
+===============================================
+Chạy script PowerShell để test tất cả API:
+  .\test-api.ps1
+
+Script sẽ:
+- Tự động đọc API key từ .env.local
+- Test tất cả 5 API endpoints
+- Lưu response vào các file JSON (response_*.json)
+- Hiển thị curl commands sẵn sàng để copy

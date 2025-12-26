@@ -87,3 +87,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ẩn header ngày trong tuần của Calendar */
+.rdp-weekdays {
+  display: none !important;
+}
+.rdp thead {
+  display: none !important;
+}

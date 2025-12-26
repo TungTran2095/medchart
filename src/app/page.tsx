@@ -1,5 +1,5 @@
-import { Dashboard } from '@/components/dashboard/dashboard';
+import { DashboardWrapper } from './dashboard-wrapper';
 
-export default async function Home() {
-  return <Dashboard />;
+export default function Home() {
+  return <DashboardWrapper />;
 }
