@@ -12,6 +12,8 @@ if (!supabaseUrl || !supabaseKey) {
 const headers = {
   apikey: supabaseKey,
   Authorization: `Bearer ${supabaseKey}`,
+  'Accept-Profile': 'public',
+  'Prefer': 'count=exact'
 };
 
 /**
@@ -22,7 +24,10 @@ const headers = {
  */
 export async function getSchema(): Promise<DatabaseSchema> {
   const res = await fetch(`${supabaseUrl}/rest/v1/`, {
-    headers,
+    headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+    },
     next: { revalidate: 3600 }, // Cache schema for 1 hour
   });
 
@@ -58,15 +63,19 @@ export async function getSchema(): Promise<DatabaseSchema> {
 }
 
 /**
- * Fetches all data from a specified table.
+ * Fetches all data from a specified table, handling pagination.
  * @param {string} table The name of the table to fetch data from.
- * @returns {Promise<any[]>} A promise that resolves to an array of data rows.
+ * @returns {Promise<any[]>} A promise that resolves to an array of all data rows.
  */
 export async function getTableData(table: string): Promise<any[]> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*`, {
-    headers,
-    cache: 'no-store'
-  });
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*`, {
+        headers: {
+            ...headers,
+            'Range-Unit': 'items',
+            'Range': '0-1000000' // Fetch up to a very large number of rows
+        },
+        cache: 'no-store'
+    });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch data for table ${table}: ${res.statusText}`);
