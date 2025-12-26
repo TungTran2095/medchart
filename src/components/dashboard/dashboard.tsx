@@ -145,7 +145,7 @@ export function Dashboard() {
 
     // isMindray filtering
     if (isMindrayOnly) {
-      newFilteredData = newFilteredData.filter(item => item.isMindray === 1 || item.isMindray === true);
+      newFilteredData = newFilteredData.filter(item => item.isMindray === 1 || item.isMindray === true || item.isMindray === '1');
     }
     
     setFilteredData(newFilteredData);
