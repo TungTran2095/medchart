@@ -7,7 +7,7 @@ import { Icons } from '@/components/icons';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { addDays, differenceInDays } from 'date-fns';
+import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ListFilter } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { TotalTestsChart } from './total-tests-chart';
 
 function DashboardHeader() {
   return (
@@ -59,13 +60,17 @@ export function Dashboard() {
   // Memoize min and max dates from data
   const { minDate, maxDate } = useMemo(() => {
     if (data.length === 0) return { minDate: undefined, maxDate: undefined };
-    let min = new Date(data[0].ngay_vao_so);
-    let max = new Date(data[0].ngay_vao_so);
+    let min: Date | undefined;
+    let max: Date | undefined;
     for (const item of data) {
       if (!item.ngay_vao_so) continue;
-      const d = new Date(item.ngay_vao_so);
-      if (d < min) min = d;
-      if (d > max) max = d;
+      try {
+        const d = parseISO(item.ngay_vao_so.split(' ')[0]);
+        if (!min || d < min) min = d;
+        if (!max || d > max) max = d;
+      } catch(e) {
+        // Ignore invalid dates
+      }
     }
     return { minDate: min, maxDate: max };
   }, [data]);
@@ -117,7 +122,7 @@ export function Dashboard() {
       newFilteredData = newFilteredData.filter(item => {
         if (!item.ngay_vao_so) return false;
         try {
-          const itemDate = new Date(item.ngay_vao_so.split(' ')[0]);
+          const itemDate = parseISO(item.ngay_vao_so.split(' ')[0]);
           return itemDate >= dateRange.from! && itemDate <= dateRange.to!;
         } catch (e) {
           return false;
@@ -158,7 +163,7 @@ export function Dashboard() {
   };
   
   const handleDateRangeChange = (newRange: DateRange | undefined) => {
-    if (newRange?.from && newRange?.to && minDate) {
+    if (newRange?.from && newRange?.to && minDate && maxDate) {
         setDateRange(newRange);
         const fromDay = differenceInDays(newRange.from, minDate);
         const toDay = differenceInDays(newRange.to, minDate);
@@ -207,6 +212,25 @@ export function Dashboard() {
         return newSelection;
     });
   };
+  
+  const dailyCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    filteredData.forEach(item => {
+      if (item.ngay_vao_so) {
+        try {
+          const date = format(parseISO(item.ngay_vao_so.split(' ')[0]), 'yyyy-MM-dd');
+          counts[date] = (counts[date] || 0) + 1;
+        } catch(e) {
+          // ignore
+        }
+      }
+    });
+
+    return Object.keys(counts).map(date => ({
+      date,
+      count: counts[date]
+    })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [filteredData]);
 
 
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
@@ -316,8 +340,8 @@ export function Dashboard() {
           </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Các thành phần biểu đồ mới sẽ được thêm vào đây */}
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+          <TotalTestsChart data={dailyCounts} isLoading={isLoading} />
         </div>
       </main>
     </div>
