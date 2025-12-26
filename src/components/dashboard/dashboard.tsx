@@ -7,8 +7,18 @@ import { Icons } from '@/components/icons';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { addDays, differenceInDays, format } from 'date-fns';
+import { addDays, differenceInDays } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ListFilter } from 'lucide-react';
 
 function DashboardHeader() {
   return (
@@ -31,7 +41,11 @@ export function Dashboard() {
   // Date range states
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [sliderRange, setSliderRange] = useState([0, 100]);
-  
+
+  // Unit filter states
+  const [allUnits, setAllUnits] = useState<string[]>([]);
+  const [selectedUnits, setSelectedUnits] = useState<string[]>(['all']);
+
   // Memoize min and max dates from data
   const { minDate, maxDate } = useMemo(() => {
     if (data.length === 0) return { minDate: undefined, maxDate: undefined };
@@ -45,14 +59,18 @@ export function Dashboard() {
     return { minDate: min, maxDate: max };
   }, [data]);
   
-  // Set initial date range when data is loaded
+  // Set initial date range and extract units when data is loaded
   useEffect(() => {
     if (minDate && maxDate) {
       setDateRange({ from: minDate, to: maxDate });
       const totalDays = differenceInDays(maxDate, minDate);
       setSliderRange([0, totalDays]);
     }
-  }, [minDate, maxDate]);
+    if (data.length > 0) {
+      const units = [...new Set(data.map(item => item.ten_don_vi).filter(Boolean))].sort();
+      setAllUnits(units);
+    }
+  }, [minDate, maxDate, data]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +78,7 @@ export function Dashboard() {
       try {
         const tableData = await getTableData(currentTable);
         setData(tableData);
+        setFilteredData(tableData); // Initialize filteredData
       } catch (error) {
         console.error(error);
         toast({
@@ -75,18 +94,33 @@ export function Dashboard() {
     fetchData();
   }, [currentTable, toast]);
 
+  // Filtering logic
   useEffect(() => {
-    if (data.length > 0 && dateRange?.from && dateRange?.to) {
-      const filtered = data.filter(item => {
+    let newFilteredData = [...data];
+
+    // Date filtering
+    if (dateRange?.from && dateRange?.to) {
+      newFilteredData = newFilteredData.filter(item => {
         if (!item.ngay_vao_so) return false;
-        const itemDate = new Date(item.ngay_vao_so.split(' ')[0]);
-        return itemDate >= dateRange.from! && itemDate <= dateRange.to!;
+        try {
+          const itemDate = new Date(item.ngay_vao_so.split(' ')[0]);
+          return itemDate >= dateRange.from! && itemDate <= dateRange.to!;
+        } catch (e) {
+          return false;
+        }
       });
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(data);
     }
-  }, [dateRange, data]);
+
+    // Unit filtering
+    if (!selectedUnits.includes('all') && selectedUnits.length > 0) {
+        newFilteredData = newFilteredData.filter(item => 
+            item.ten_don_vi && selectedUnits.includes(item.ten_don_vi)
+        );
+    }
+    
+    setFilteredData(newFilteredData);
+  }, [dateRange, selectedUnits, data]);
+
 
   const handleSliderChange = (value: number[]) => {
     if (minDate) {
@@ -108,6 +142,27 @@ export function Dashboard() {
     }
   }
 
+  const handleUnitSelection = (unit: string) => {
+    setSelectedUnits(prev => {
+        if (unit === 'all') {
+            return prev.includes('all') ? [] : ['all'];
+        }
+
+        let newSelection = prev.filter(u => u !== 'all');
+
+        if (newSelection.includes(unit)) {
+            newSelection = newSelection.filter(u => u !== unit);
+        } else {
+            newSelection.push(unit);
+        }
+        
+        if (newSelection.length === 0) return ['all'];
+        if (newSelection.length === allUnits.length) return ['all'];
+
+        return newSelection;
+    });
+  };
+
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
 
   return (
@@ -115,6 +170,40 @@ export function Dashboard() {
       <DashboardHeader />
       <main className="flex-1 p-4 md:p-8 space-y-8">
         <div className="flex flex-col md:flex-row gap-4 items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <ListFilter className="h-4 w-4" />
+                  <span>Đơn vị</span>
+                  {selectedUnits.length > 0 && !selectedUnits.includes('all') && (
+                    <span className="ml-2 rounded-full bg-primary px-2 text-xs text-primary-foreground">
+                      {selectedUnits.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>Lọc theo đơn vị</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                    checked={selectedUnits.includes('all')}
+                    onCheckedChange={() => handleUnitSelection('all')}
+                >
+                    Tất cả
+                </DropdownMenuCheckboxItem>
+                {allUnits.map(unit => (
+                    <DropdownMenuCheckboxItem
+                        key={unit}
+                        checked={selectedUnits.includes(unit)}
+                        onCheckedChange={() => handleUnitSelection(unit)}
+                        disabled={selectedUnits.includes('all')}
+                    >
+                        {unit}
+                    </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           <DateRangePicker
             date={dateRange}
             onDateChange={handleDateRangeChange}
@@ -123,11 +212,11 @@ export function Dashboard() {
           <div className="flex-1 w-full md:w-auto">
             {minDate && maxDate && (
               <div className="flex items-center gap-4">
-                 <Label htmlFor="date-slider" className="min-w-fit">Date Range</Label>
+                 <Label htmlFor="date-slider" className="min-w-fit">Khoảng ngày</Label>
                  <Slider
                     id="date-slider"
                     min={0}
-                    max={totalDays}
+                    max={totalDays > 0 ? totalDays : 100}
                     value={sliderRange}
                     onValueChange={handleSliderChange}
                     disabled={isLoading || !minDate}
@@ -137,7 +226,7 @@ export function Dashboard() {
             )}
           </div>
         </div>
-        {/* Dashboard trống, sẵn sàng để thêm biểu đồ mới */}
+        
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Các thành phần biểu đồ mới sẽ được thêm vào đây */}
         </div>
