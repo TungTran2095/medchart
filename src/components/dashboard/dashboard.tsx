@@ -36,6 +36,7 @@ function DashboardHeader() {
 }
 
 export function Dashboard() {
+  const [isClient, setIsClient] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,6 +58,9 @@ export function Dashboard() {
   // isMindray filter state
   const [isMindrayOnly, setIsMindrayOnly] = useState(true);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Memoize min and max dates from data
   const { minDate, maxDate } = useMemo(() => {
@@ -81,9 +85,13 @@ export function Dashboard() {
   // Set initial date range and extract unique values for filters when data is loaded
   useEffect(() => {
     if (data.length > 0 && minDate && maxDate) {
-      setDateRange({ from: minDate, to: maxDate });
+      if(!dateRange?.from || !dateRange?.to) {
+        setDateRange({ from: minDate, to: maxDate });
+      }
       const totalDays = differenceInDays(maxDate, minDate);
-      setSliderRange([0, totalDays]);
+      if (sliderRange[0] === 0 && sliderRange[1] === 100) {
+        setSliderRange([0, totalDays > 0 ? totalDays : 0]);
+      }
       
       const units = [...new Set(data.map(item => item.ten_don_vi).filter(Boolean))].sort();
       setAllUnits(units);
@@ -91,7 +99,7 @@ export function Dashboard() {
       const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
       setAllTestNames(testNames);
     }
-  }, [data, minDate, maxDate]);
+  }, [data, minDate, maxDate, dateRange, sliderRange]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,7 +107,6 @@ export function Dashboard() {
       try {
         const tableData = await getTableData(currentTable);
         setData(tableData);
-        setFilteredData(tableData); // Initialize filtered data
       } catch (error) {
         console.error(error);
         toast({
@@ -117,7 +124,10 @@ export function Dashboard() {
 
   // Filtering logic
   useEffect(() => {
-    if (isLoading) return; // Don't filter until data is loaded
+    if (isLoading || data.length === 0) {
+      setFilteredData([]);
+      return;
+    }
     
     let newFilteredData = [...data];
 
@@ -259,6 +269,20 @@ export function Dashboard() {
 
 
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
+  
+  if (!isClient) {
+    return (
+      <div className="flex min-h-screen w-full flex-col">
+        <DashboardHeader />
+        <main className="flex-1 p-4 md:p-8 space-y-8">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <TotalTestsChart data={[]} isLoading={true} />
+            <UnitDistributionChart data={[]} isLoading={true} />
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
