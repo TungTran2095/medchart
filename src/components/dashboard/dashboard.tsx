@@ -1,35 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarInset,
-  SidebarHeader,
-  SidebarContent,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { Configurator } from './configurator';
 import { ChartDisplay } from './chart-display';
 import { DataTable } from './data-table';
-import type { DatabaseSchema, ChartDataConfig } from '@/lib/types';
+import type { ChartDataConfig } from '@/lib/types';
 import { getTableData } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
-import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 
+const defaultChartConfig: ChartDataConfig = {
+    chartType: 'bar',
+    xAxis: 'ten_may',
+    yAxis: 'so_luong',
+};
+
 function DashboardHeader() {
-  const { toggleSidebar, isMobile } = useSidebar();
   return (
     <div className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6 sticky top-0 z-10">
-      {isMobile && (
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle Sidebar">
-          <PanelLeft />
-        </Button>
-      )}
       <div className="flex items-center gap-2">
         <Icons.logo className="h-6 w-6 text-primary" />
         <h1 className="text-lg font-semibold md:text-xl font-headline">Dashboard</h1>
@@ -38,14 +27,35 @@ function DashboardHeader() {
   );
 }
 
-export function Dashboard({ schema }: { schema: DatabaseSchema }) {
+export function Dashboard() {
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [chartConfig, setChartConfig] = useState<ChartDataConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentTable, setCurrentTable] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [chartConfig, setChartConfig] = useState<ChartDataConfig | null>(defaultChartConfig);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentTable, setCurrentTable] = useState<string>('mindray_trans');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const tableData = await getTableData(currentTable);
+            setData(tableData);
+        } catch (error) {
+            console.error(error);
+            toast({
+                variant: 'destructive',
+                title: 'Failed to fetch data',
+                description: `Could not load data for table: ${currentTable}`,
+            });
+            setData([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [currentTable, toast]);
 
   useEffect(() => {
     if (currentTable === 'mindray_trans' && selectedDate) {
@@ -59,47 +69,9 @@ export function Dashboard({ schema }: { schema: DatabaseSchema }) {
     }
   }, [selectedDate, data, currentTable]);
 
-  const handleConfigChange = async (table: string, config: ChartDataConfig) => {
-    setIsLoading(true);
-    setChartConfig(config);
-    setCurrentTable(table);
-    setSelectedDate(undefined);
-    try {
-      const tableData = await getTableData(table);
-      setData(tableData);
-      setFilteredData(tableData);
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to fetch data',
-        description: `Could not load data for table: ${table}`,
-      });
-      setData([]);
-      setFilteredData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="border-b">
-          <div className="flex h-14 items-center gap-2 px-4 lg:h-[60px] lg:px-6">
-            <Icons.logo className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-semibold font-headline">Dashboard</h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <Configurator
-            schema={schema}
-            onConfigChange={handleConfigChange}
-            isParentLoading={isLoading}
-          />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
+    <div className="flex min-h-screen w-full flex-col">
         <DashboardHeader />
         <main className="flex-1 p-4 md:p-8 space-y-8">
           {currentTable === 'mindray_trans' && (
@@ -110,7 +82,6 @@ export function Dashboard({ schema }: { schema: DatabaseSchema }) {
           <ChartDisplay data={filteredData} config={chartConfig} isLoading={isLoading} />
           <DataTable data={filteredData} isLoading={isLoading} tableName={currentTable} />
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }
