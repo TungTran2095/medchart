@@ -55,7 +55,7 @@ export function Dashboard() {
   const [selectedTestNames, setSelectedTestNames] = useState<string[]>(['all']);
 
   // isMindray filter state
-  const [isMindrayOnly, setIsMindrayOnly] = useState(false);
+  const [isMindrayOnly, setIsMindrayOnly] = useState(true);
 
 
   // Memoize min and max dates from data
