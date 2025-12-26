@@ -22,6 +22,7 @@ import { ListFilter } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TotalTestsChart } from './total-tests-chart';
+import { UnitDistributionChart } from './unit-distribution-chart';
 
 function DashboardHeader() {
   return (
@@ -235,6 +236,20 @@ export function Dashboard() {
     })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredData]);
 
+  const unitCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    filteredData.forEach(item => {
+      if (item.ten_don_vi) {
+        counts[item.ten_don_vi] = (counts[item.ten_don_vi] || 0) + 1;
+      }
+    });
+
+    return Object.keys(counts).map(unitName => ({
+      name: unitName,
+      value: counts[unitName]
+    })).sort((a,b) => b.value - a.value);
+  }, [filteredData]);
+
 
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
 
@@ -343,8 +358,9 @@ export function Dashboard() {
           </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <TotalTestsChart data={dailyCounts} isLoading={isLoading} />
+          <UnitDistributionChart data={unitCounts} isLoading={isLoading} />
         </div>
       </main>
     </div>
