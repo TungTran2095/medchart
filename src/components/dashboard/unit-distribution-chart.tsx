@@ -18,8 +18,6 @@ import {
 import {
   ChartContainer,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PieChart } from 'lucide-react';
@@ -59,6 +57,29 @@ function LoadingState() {
     </div>
   );
 }
+
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  if (percent < 0.05) return null; // Don't render label for small slices
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      className="text-xs font-medium"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
 
 export function UnitDistributionChart({ data, isLoading }: UnitDistributionChartProps) {
   const chartConfig = {
@@ -115,6 +136,8 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
               nameKey="name"
               innerRadius={60}
               strokeWidth={5}
+              labelLine={false}
+              label={renderCustomizedLabel}
             >
               {data.map((entry, index) => (
                 <Cell
@@ -123,10 +146,6 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
                 />
               ))}
             </Pie>
-             <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-translate-y-[2rem] flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-            />
           </RechartsPieChart>
         </ChartContainer>
       </CardContent>
