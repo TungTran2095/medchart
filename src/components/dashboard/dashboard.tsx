@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ListFilter } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 function DashboardHeader() {
   return (
@@ -46,12 +47,21 @@ export function Dashboard() {
   const [allUnits, setAllUnits] = useState<string[]>([]);
   const [selectedUnits, setSelectedUnits] = useState<string[]>(['all']);
 
+  // Test name filter states
+  const [allTestNames, setAllTestNames] = useState<string[]>([]);
+  const [selectedTestNames, setSelectedTestNames] = useState<string[]>(['all']);
+
+  // isMindray filter state
+  const [isMindrayOnly, setIsMindrayOnly] = useState(false);
+
+
   // Memoize min and max dates from data
   const { minDate, maxDate } = useMemo(() => {
     if (data.length === 0) return { minDate: undefined, maxDate: undefined };
     let min = new Date(data[0].ngay_vao_so);
     let max = new Date(data[0].ngay_vao_so);
     for (const item of data) {
+      if (!item.ngay_vao_so) continue;
       const d = new Date(item.ngay_vao_so);
       if (d < min) min = d;
       if (d > max) max = d;
@@ -59,7 +69,7 @@ export function Dashboard() {
     return { minDate: min, maxDate: max };
   }, [data]);
   
-  // Set initial date range and extract units when data is loaded
+  // Set initial date range and extract unique values for filters when data is loaded
   useEffect(() => {
     if (minDate && maxDate) {
       setDateRange({ from: minDate, to: maxDate });
@@ -69,6 +79,9 @@ export function Dashboard() {
     if (data.length > 0) {
       const units = [...new Set(data.map(item => item.ten_don_vi).filter(Boolean))].sort();
       setAllUnits(units);
+      
+      const testNames = [...new Set(data.map(item => item.ten_xet_nghiem).filter(Boolean))].sort();
+      setAllTestNames(testNames);
     }
   }, [minDate, maxDate, data]);
 
@@ -117,9 +130,21 @@ export function Dashboard() {
             item.ten_don_vi && selectedUnits.includes(item.ten_don_vi)
         );
     }
+
+    // Test name filtering
+    if (!selectedTestNames.includes('all') && selectedTestNames.length > 0) {
+        newFilteredData = newFilteredData.filter(item => 
+            item.ten_xet_nghiem && selectedTestNames.includes(item.ten_xet_nghiem)
+        );
+    }
+
+    // isMindray filtering
+    if (isMindrayOnly) {
+      newFilteredData = newFilteredData.filter(item => item.isMindray === 1);
+    }
     
     setFilteredData(newFilteredData);
-  }, [dateRange, selectedUnits, data]);
+  }, [dateRange, selectedUnits, selectedTestNames, isMindrayOnly, data]);
 
 
   const handleSliderChange = (value: number[]) => {
@@ -156,12 +181,32 @@ export function Dashboard() {
             newSelection.push(unit);
         }
         
-        if (newSelection.length === 0) return ['all'];
-        if (newSelection.length === allUnits.length) return ['all'];
+        if (newSelection.length === 0 || newSelection.length === allUnits.length) return ['all'];
 
         return newSelection;
     });
   };
+
+  const handleTestNameSelection = (testName: string) => {
+    setSelectedTestNames(prev => {
+        if (testName === 'all') {
+            return prev.includes('all') ? [] : ['all'];
+        }
+
+        let newSelection = prev.filter(t => t !== 'all');
+
+        if (newSelection.includes(testName)) {
+            newSelection = newSelection.filter(t => t !== testName);
+        } else {
+            newSelection.push(testName);
+        }
+        
+        if (newSelection.length === 0 || newSelection.length === allTestNames.length) return ['all'];
+
+        return newSelection;
+    });
+  };
+
 
   const totalDays = minDate && maxDate ? differenceInDays(maxDate, minDate) : 0;
 
@@ -203,6 +248,45 @@ export function Dashboard() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <ListFilter className="h-4 w-4" />
+                  <span>Xét nghiệm</span>
+                  {selectedTestNames.length > 0 && !selectedTestNames.includes('all') && (
+                    <span className="ml-2 rounded-full bg-primary px-2 text-xs text-primary-foreground">
+                      {selectedTestNames.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
+                <DropdownMenuLabel>Lọc theo xét nghiệm</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                    checked={selectedTestNames.includes('all')}
+                    onCheckedChange={() => handleTestNameSelection('all')}
+                >
+                    Tất cả
+                </DropdownMenuCheckboxItem>
+                {allTestNames.map(name => (
+                    <DropdownMenuCheckboxItem
+                        key={name}
+                        checked={selectedTestNames.includes(name)}
+                        onCheckedChange={() => handleTestNameSelection(name)}
+                        disabled={selectedTestNames.includes('all')}
+                    >
+                        {name}
+                    </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <div className="flex items-center space-x-2">
+              <Switch id="mindray-switch" checked={isMindrayOnly} onCheckedChange={setIsMindrayOnly} />
+              <Label htmlFor="mindray-switch">Only Mindray</Label>
+            </div>
 
           <DateRangePicker
             date={dateRange}
