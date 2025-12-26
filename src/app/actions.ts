@@ -17,20 +17,32 @@ const headers = {
 };
 
 async function callRpc(functionName: string, params: object) {
-    const res = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
+    const url = `${supabaseUrl}/rest/v1/rpc/${functionName}`;
+    const body = JSON.stringify(params);
+    
+    console.log(`Calling RPC: ${functionName}`, { url, params });
+    
+    const res = await fetch(url, {
         method: 'POST',
         headers,
-        body: JSON.stringify(params),
+        body,
         cache: 'no-store'
     });
 
     if (!res.ok) {
         const errorText = await res.text();
-        console.error(`Failed to call RPC ${functionName}:`, errorText);
-        throw new Error(`Failed to call RPC ${functionName}: ${res.statusText}`);
+        console.error(`Failed to call RPC ${functionName}:`, {
+            status: res.status,
+            statusText: res.statusText,
+            error: errorText,
+            params
+        });
+        throw new Error(`Failed to call RPC ${functionName}: ${res.status} ${res.statusText} - ${errorText}`);
     }
 
-    return res.json();
+    const result = await res.json();
+    console.log(`RPC ${functionName} response:`, result);
+    return result;
 }
 
 export async function getDashboardData(
@@ -40,7 +52,7 @@ export async function getDashboardData(
     isMindrayOnly: boolean
 ) {
     if (!dateRange.from || !dateRange.to) {
-        return { dailyCounts: [], unitCounts: [] };
+        return { dailyCounts: [], unitCounts: [], testCounts: [] };
     }
 
     const params = {
@@ -52,31 +64,72 @@ export async function getDashboardData(
     };
     
     try {
-        const [dailyCounts, unitCounts] = await Promise.all([
+        const [dailyCountsResponse, unitCountsResponse, testCountsResponse] = await Promise.all([
             callRpc('get_daily_test_counts', params),
             callRpc('get_unit_distribution', params),
+            callRpc('get_test_distribution', params),
         ]);
 
-        return { dailyCounts, unitCounts };
+        // Supabase RPC trả về array trực tiếp
+        const dailyCounts = Array.isArray(dailyCountsResponse) ? dailyCountsResponse : [];
+        const unitCounts = Array.isArray(unitCountsResponse) ? unitCountsResponse : [];
+        const testCounts = Array.isArray(testCountsResponse) ? testCountsResponse : [];
+
+        console.log('Processed dashboard data:', { 
+            dailyCountsLength: dailyCounts.length, 
+            unitCountsLength: unitCounts.length,
+            testCountsLength: testCounts.length,
+            sampleDaily: dailyCounts[0],
+            sampleUnit: unitCounts[0],
+            sampleTest: testCounts[0]
+        });
+
+        return { dailyCounts, unitCounts, testCounts };
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        return { dailyCounts: [], unitCounts: [] };
+        return { dailyCounts: [], unitCounts: [], testCounts: [] };
     }
 }
 
 
 export async function getInitialDashboardState() {
     try {
-        const [filterOptions, dateRangeResult] = await Promise.all([
+        const [filterOptionsResponse, dateRangeResponse] = await Promise.all([
             callRpc('get_filter_options', {}),
             callRpc('get_date_range', {}),
         ]);
         
+        console.log('Initial state responses:', {
+            filterOptions: filterOptionsResponse,
+            dateRange: dateRangeResponse
+        });
+
+        // get_filter_options trả về JSON object
+        const filterOptions = filterOptionsResponse || {};
+        const units = Array.isArray(filterOptions.units) 
+          ? filterOptions.units.map((u: string) => u?.trim() || '').filter(Boolean)
+          : [];
+        const tests = Array.isArray(filterOptions.tests) 
+          ? filterOptions.tests.map((t: string) => t?.trim() || '').filter(Boolean)
+          : [];
+
+        // get_date_range trả về JSON object
+        const dateRangeResult = dateRangeResponse || {};
+        const minDate = dateRangeResult.minDate || dateRangeResult.mindate || null;
+        const maxDate = dateRangeResult.maxDate || dateRangeResult.maxdate || null;
+
+        console.log('Processed initial state:', {
+            unitsCount: units.length,
+            testsCount: tests.length,
+            minDate,
+            maxDate
+        });
+        
         return {
-            units: filterOptions.units?.sort() || [],
-            tests: filterOptions.tests?.sort() || [],
-            minDate: dateRangeResult.mindate,
-            maxDate: dateRangeResult.maxdate,
+            units: units.sort(),
+            tests: tests.sort(),
+            minDate,
+            maxDate,
         };
     } catch(error) {
         console.error('Error fetching initial state:', error);

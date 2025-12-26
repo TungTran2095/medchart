@@ -59,24 +59,44 @@ function LoadingState() {
 }
 
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }: any) => {
+  // Tính toán vị trí bên ngoài chart - tăng khoảng cách để có nhiều không gian hơn
+  const radius = outerRadius + 60; // 60px bên ngoài chart để có không gian cho label
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-  if (percent < 0.05) return null; // Don't render label for small slices
+  if (percent < 0.005) return null; // Don't render label for very small slices (< 0.5%)
+
+  const textAnchor = x > cx ? 'start' : 'end';
+  const lineHeight = 16;
+  const fontSize = 12;
 
   return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
-      className="text-xs font-medium"
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
+    <g>
+      {/* Line từ slice đến label */}
+      <line
+        x1={cx + outerRadius * Math.cos(-midAngle * RADIAN)}
+        y1={cy + outerRadius * Math.sin(-midAngle * RADIAN)}
+        x2={x}
+        y2={y}
+        stroke="hsl(var(--muted-foreground))"
+        strokeWidth={1.5}
+      />
+      <text
+        x={x}
+        y={y - lineHeight / 2}
+        fill="hsl(var(--foreground))"
+        textAnchor={textAnchor}
+        fontSize={fontSize}
+        fontWeight={500}
+        className="select-none"
+      >
+        <tspan x={x} dy="0" fontSize={fontSize}>{name}</tspan>
+        <tspan x={x} dy={lineHeight} fontSize={fontSize - 1} fill="hsl(var(--muted-foreground))">
+          {value.toLocaleString('vi-VN')} ({(percent * 100).toFixed(1)}%)
+        </tspan>
+      </text>
+    </g>
   );
 };
 
@@ -130,12 +150,14 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
           Số lượng xét nghiệm được thực hiện tại mỗi đơn vị.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[350px]"
+          className="mx-auto w-full"
+          style={{ minHeight: '600px', height: '600px' }}
         >
-          <RechartsPieChart>
+          <ResponsiveContainer width="100%" height={600}>
+            <RechartsPieChart margin={{ top: 40, right: 200, bottom: 40, left: 200 }}>
             <Tooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel nameKey="name" />}
@@ -144,9 +166,12 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
               data={data}
               dataKey="value"
               nameKey="name"
-              innerRadius={60}
+              cx="50%"
+              cy="50%"
+              innerRadius={80}
+              outerRadius={180}
               strokeWidth={5}
-              labelLine={false}
+              labelLine={true}
               label={renderCustomizedLabel}
             >
               {data.map((entry, index) => (
@@ -157,6 +182,7 @@ export function UnitDistributionChart({ data, isLoading }: UnitDistributionChart
               ))}
             </Pie>
           </RechartsPieChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>

@@ -10,6 +10,7 @@ import {
   Tooltip,
   CartesianGrid,
   Legend,
+  LabelList,
 } from 'recharts';
 import {
   Card,
@@ -137,14 +138,28 @@ export function TotalTestsChart({ data, isLoading }: TotalTestsChartProps) {
                 stroke="var(--color-total)"
                 strokeWidth={2}
                 dot={true}
-              />
+              >
+                <LabelList 
+                  dataKey="total" 
+                  position="top"
+                  formatter={(value: number) => value.toLocaleString('vi-VN')}
+                  style={{ fontSize: '11px', fill: 'var(--color-total)', fontWeight: 500 }}
+                />
+              </Line>
               <Line
                 type="monotone"
                 dataKey="mindray"
                 stroke="var(--color-mindray)"
                 strokeWidth={2}
                 dot={true}
-              />
+              >
+                <LabelList 
+                  dataKey="mindray" 
+                  position="top"
+                  formatter={(value: number) => value.toLocaleString('vi-VN')}
+                  style={{ fontSize: '11px', fill: 'var(--color-mindray)', fontWeight: 500 }}
+                />
+              </Line>
             </LineChart>
           </ResponsiveContainer>
         </ChartContainer>
