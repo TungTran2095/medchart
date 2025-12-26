@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ListFilter } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 function DashboardHeader() {
   return (
@@ -230,22 +231,24 @@ export function Dashboard() {
               <DropdownMenuContent className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DropdownMenuLabel>Lọc theo đơn vị</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                    checked={selectedUnits.includes('all')}
-                    onCheckedChange={() => handleUnitSelection('all')}
-                >
-                    Tất cả
-                </DropdownMenuCheckboxItem>
-                {allUnits.map(unit => (
-                    <DropdownMenuCheckboxItem
-                        key={unit}
-                        checked={selectedUnits.includes(unit)}
-                        onCheckedChange={() => handleUnitSelection(unit)}
-                        disabled={selectedUnits.includes('all')}
-                    >
-                        {unit}
-                    </DropdownMenuCheckboxItem>
-                ))}
+                <ScrollArea className="h-40">
+                  <DropdownMenuCheckboxItem
+                      checked={selectedUnits.includes('all')}
+                      onCheckedChange={() => handleUnitSelection('all')}
+                  >
+                      Tất cả
+                  </DropdownMenuCheckboxItem>
+                  {allUnits.map(unit => (
+                      <DropdownMenuCheckboxItem
+                          key={unit}
+                          checked={selectedUnits.includes(unit)}
+                          onCheckedChange={() => handleUnitSelection(unit)}
+                          disabled={selectedUnits.includes('all')}
+                      >
+                          {unit}
+                      </DropdownMenuCheckboxItem>
+                  ))}
+                </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -264,22 +267,24 @@ export function Dashboard() {
               <DropdownMenuContent className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DropdownMenuLabel>Lọc theo xét nghiệm</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                    checked={selectedTestNames.includes('all')}
-                    onCheckedChange={() => handleTestNameSelection('all')}
-                >
-                    Tất cả
-                </DropdownMenuCheckboxItem>
-                {allTestNames.map(name => (
-                    <DropdownMenuCheckboxItem
-                        key={name}
-                        checked={selectedTestNames.includes(name)}
-                        onCheckedChange={() => handleTestNameSelection(name)}
-                        disabled={selectedTestNames.includes('all')}
-                    >
-                        {name}
-                    </DropdownMenuCheckboxItem>
-                ))}
+                <ScrollArea className="h-40">
+                  <DropdownMenuCheckboxItem
+                      checked={selectedTestNames.includes('all')}
+                      onCheckedChange={() => handleTestNameSelection('all')}
+                  >
+                      Tất cả
+                  </DropdownMenuCheckboxItem>
+                  {allTestNames.map(name => (
+                      <DropdownMenuCheckboxItem
+                          key={name}
+                          checked={selectedTestNames.includes(name)}
+                          onCheckedChange={() => handleTestNameSelection(name)}
+                          disabled={selectedTestNames.includes('all')}
+                      >
+                          {name}
+                      </DropdownMenuCheckboxItem>
+                  ))}
+                </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
             
