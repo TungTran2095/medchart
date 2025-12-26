@@ -146,11 +146,12 @@ export function Dashboard() {
 
     // isMindray filtering
     if (isMindrayOnly) {
-      newFilteredData = newFilteredData.filter(item => {
-        const value = item.isMindray;
-        // This will handle 1, '1', true, 'true'
-        return value == 1 || String(value).toLowerCase() === 'true';
-      });
+        newFilteredData = newFilteredData.filter(item => {
+            const value = item.isMindray;
+            // This will handle 1, '1', true, 'true', and other truthy values
+            // while being safe against null/undefined.
+            return value === true || value === 1 || String(value).toLowerCase() === 'true' || String(value) === '1';
+        });
     }
     
     setFilteredData(newFilteredData);
